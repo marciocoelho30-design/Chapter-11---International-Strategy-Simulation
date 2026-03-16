@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SGMT 2200: Global Strategy Simulator v3</title>
+<style>
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f4f4f9;color:#333;margin:0;padding:20px;line-height:1.6}
+  .container{max-width:1140px;margin:auto;background:#fff;padding:30px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.1)}
+  h1,h2,h3,h4{color:#003366}
+  .company-grid{display:flex;flex-wrap:wrap;gap:20px;margin-top:20px;justify-content:center}
+  .company-grid .card{flex:1 1 300px;max-width:360px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:20px}
+  .card{background:#f9f9f9;border:1px solid #ddd;border-radius:8px;padding:20px;text-align:left;transition:transform .2s;display:flex;flex-direction:column;justify-content:space-between}
+  .card:hover{transform:translateY(-3px);box-shadow:0 4px 10px rgba(0,0,0,.1)}
+  .card h3{margin-top:0;color:#b30000;border-bottom:2px solid #ddd;padding-bottom:10px}
+  .select-btn{display:block;margin-top:15px;padding:12px;background:#003366;color:#fff;border:none;border-radius:4px;cursor:pointer;width:100%;font-size:1em;font-weight:700;text-align:center}
+  .select-btn:hover{background:#00509e}
+  .back-btn{display:inline-block;background:#6c757d;color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-size:.9em;margin-bottom:15px;transition:background .2s}
+  .back-btn:hover{background:#5a6268}
+  .review-btn{display:inline-block;background:#5a287d;color:#fff;border:none;padding:8px 15px;border-radius:4px;cursor:pointer;font-size:.9em;margin-bottom:15px;margin-left:10px;transition:background .2s}
+  .review-btn:hover{background:#3d1a56}
+  .macro-data{width:100%;border-collapse:collapse;margin-top:10px;font-size:.82em;background:#fff}
+  .macro-data th,.macro-data td{border:1px solid #ddd;padding:5px 7px;text-align:left}
+  .macro-data th{background:#f2f2f2;color:#003366;width:42%}
+  .screen{display:none}
+  #screen-company{display:block}
+  .budget-board{background:#e2f0cb;padding:15px;border-radius:5px;font-size:1.2em;font-weight:700;margin-bottom:20px;color:#2d5a27;border:1px solid #b7d6a3;display:flex;justify-content:space-between}
+  .timeline{font-size:.9em;background:#003366;color:#fff;padding:5px 10px;border-radius:4px}
+  .option-btn{display:block;width:100%;padding:18px;margin:12px 0;background:#fdfdfd;color:#333;border:2px solid #003366;border-radius:5px;cursor:pointer;font-size:.95em;text-align:left;transition:all .2s}
+  .option-btn:hover{background:#003366;color:#fff}
+  .option-btn:hover .strategy-detail{color:#cce0ff}
+  .strategy-label{font-size:1.05em;font-weight:700}
+  .strategy-detail{margin-top:6px;font-size:.88em;color:#555;line-height:1.4}
+  .tags{font-size:.82em;background:#eee;padding:2px 6px;border-radius:4px;color:#555;font-weight:700;margin-right:4px;display:inline-block;margin-bottom:4px}
+  .feedback-box{background:#fff3cd;padding:20px;border-left:5px solid #ffecb5;margin-top:20px;border-radius:4px}
+  .twist-box{background:#f8d7da;padding:20px;border-left:5px solid #f5c6cb;margin-top:20px;border-radius:4px}
+  .success-box{background:#d4edda;padding:20px;border-left:5px solid #c3e6cb;margin-top:20px;border-radius:4px}
+  .twist-section{margin:12px 0;padding:10px 15px;border-radius:4px;background:rgba(255,255,255,.55)}
+  .twist-section h4{margin:0 0 5px;font-size:.95em;text-transform:uppercase;letter-spacing:.05em}
+  .twist-section p{margin:0;font-size:.92em}
+  .intel-brief{background:#eef4ff;border:1px solid #c0d4f5;padding:12px 16px;border-radius:4px;margin-top:12px;font-size:.88em}
+  .intel-brief h4{margin:0 0 6px;color:#003366;font-size:.9em;text-transform:uppercase;letter-spacing:.05em}
+  .ideal-reveal{background:#d4edda;border-left:4px solid #28a745;padding:12px 15px;margin-top:10px;border-radius:4px;font-size:.9em}
+  .ideal-reveal.warn{background:#fff3cd;border-left-color:#ffc107}
+  .ideal-reveal.info{background:#eef4ff;border-left-color:#003366}
+  .final-table{width:100%;border-collapse:collapse;margin:15px 0;font-size:.9em}
+  .final-table th,.final-table td{border:1px solid #c3e6cb;padding:8px 12px;text-align:left}
+  .final-table th{background:#d4edda;color:#155724}
+  .final-table tr:nth-child(even){background:#f0faf2}
+  .company-detail{font-size:.88em;color:#444;margin:5px 0}
+  .company-detail strong{color:#003366}
+  /* Phase 2 briefing panel */
+  .phase2-brief{background:#fdfaf0;border:2px solid #e0c84a;border-radius:8px;padding:20px;margin-bottom:25px}
+  .phase2-brief h3{margin-top:0;color:#7a5c00}
+  .brief-section{margin:10px 0;padding:10px 14px;background:rgba(255,255,255,.6);border-radius:4px}
+  .brief-section h4{margin:0 0 5px;font-size:.9em;text-transform:uppercase;letter-spacing:.05em;color:#555}
+  /* Review modal */
+  .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:flex-start;padding-top:60px}
+  .modal-overlay.active{display:flex}
+  .modal-box{background:#fff;border-radius:8px;padding:30px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;position:relative}
+  .modal-close{position:absolute;top:12px;right:16px;font-size:1.4em;cursor:pointer;color:#666;background:none;border:none}
+  .modal-close:hover{color:#b30000}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- MODAL: Review Phase 1 -->
+  <div class="modal-overlay" id="review-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeReview()">&#10005;</button>
+      <h2 style="margin-top:0">&#128203; Phase 1 Performance Review</h2>
+      <div id="review-content"></div>
+    </div>
+  </div>
+
+  <!-- GAME HEADER -->
+  <div id="game-header" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1 id="display-company-name" style="margin:0">Company Name</h1>
+      <span id="timeline-display" class="timeline">Year: 1</span>
+    </div>
+    <hr>
+    <div class="budget-board">
+      <span>Operating Budget: $<span id="budget"></span></span>
+      <span id="target-country-display" style="color:#003366">Target Market: Pending...</span>
+    </div>
+  </div>
+
+  <!-- SCREEN: COMPANY -->
+  <div id="screen-company" class="screen">
+    <h1>&#127760; SGMT 2200: Global Strategy Simulator</h1>
+    <p>Your executive team has been appointed to lead one of five firms through a <strong>10-year global expansion plan</strong>. You will enter two international markets sequentially, selecting an entry strategy for each, then responding to real-world disruptions five years in. Study each company's profile carefully — your strategic decisions must match both the company's internal capabilities <em>and</em> the market's external pressures.</p>
+    <div class="company-grid" id="company-grid"></div>
+  </div>
+
+  <!-- SCREEN: COUNTRY -->
+  <div id="screen-country" class="screen">
+    <div id="phase2-brief-container"></div>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <button class="back-btn" id="btn-back-country" onclick="backFromCountries()">&#8592; Back</button>
+      <button class="review-btn" id="btn-review-p1" style="display:none" onclick="openReview()">&#128203; Review Phase 1 Results</button>
+    </div>
+    <h2 id="country-phase-title">Phase 1: First Market Prioritization</h2>
+    <p id="country-phase-desc">Review the macro-environmental data and market intelligence brief for each country. Select one primary market to enter.</p>
+    <div class="grid-3" id="country-grid"></div>
+  </div>
+
+  <!-- SCREEN: STRATEGY -->
+  <div id="screen-strategy" class="screen">
+    <h2 id="strategy-phase-title">Phase 2: Core Strategy Selection</h2>
+    <button class="back-btn" onclick="goBackToCountries()">&#8592; Back to Country Selection</button>
+    <p>Based on your company's internal capabilities <em>and</em> the specific pressures of your target market, allocate your budget to one of the four global strategies from Hill &amp; Jones Ch. 11. There is a <strong>single best-fit strategy</strong> — think carefully about cost pressure vs. local responsiveness pressure.</p>
+    <div id="strategy-options"></div>
+  </div>
+
+  <!-- SCREEN: FEEDBACK -->
+  <div id="screen-feedback" class="screen">
+    <h2 id="feedback-title">Year 1–5: Expansion Results</h2>
+    <div id="feedback-content" class="feedback-box"></div>
+    <button class="select-btn" onclick="startTwist()" style="margin-top:30px">Advance 5 Years into the Future &#8594;</button>
+  </div>
+
+  <!-- SCREEN: TWIST -->
+  <div id="screen-twist" class="screen">
+    <h2 id="twist-title">The 5-Year Update</h2>
+    <div id="twist-content" class="twist-box"></div>
+    <h3 style="margin-top:30px">How does your executive team respond?</h3>
+    <p style="font-size:.9em;color:#555">Consider: Is this disruption structural and permanent, or temporary and cyclical? Does your current strategy still hold competitive logic, or has the environment fundamentally changed?</p>
+    <div id="twist-options"></div>
+  </div>
+
+  <!-- SCREEN: TWIST RESULT -->
+  <div id="screen-twist-result" class="screen">
+    <h2>Executive Reaction: Outcome</h2>
+    <div id="twist-result-content" class="feedback-box"></div>
+    <button class="select-btn" id="btn-next-expansion" onclick="startNextExpansion()" style="margin-top:30px">Proceed to Next Global Expansion &#8594;</button>
+  </div>
+
+  <!-- SCREEN: FINAL -->
+  <div id="screen-final" class="screen">
+    <h2>&#128202; 10-Year Final Executive Report</h2>
+    <div id="final-content" class="success-box"></div>
+    <button class="select-btn" onclick="location.reload()" style="margin-top:30px">&#8635; Restart Simulation</button>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+var state={phase:1,budget:0,company:null,currentCountry:null,history:[]};
+
+/* =====================================================================
+   DATABASE
+   ===================================================================== */
+var db={
+
+/* ---- 1. TECHGEAR ---- */
+"TechGear":{
+  name:"TechGear Inc.",industry:"Consumer Electronics",budget:15000000,
+  tagline:'"Smarter Devices, Everywhere."',
+  founded:"2009, Waterloo, Ontario, Canada",revenue:"~$310M annually",employees:"~2,400 worldwide",
+  products:"Budget-to-mid-range smartphones, smart home devices, wireless accessories",
+  strengths:"Rapid 18-month product iteration cycles; efficient Tier-2 component sourcing in Southeast Asia; strong direct-to-consumer e-commerce platform.",
+  weaknesses:"Limited brand recognition outside North America; thin margins leave little room for error; highly reliant on imported chipsets from Taiwan and South Korea.",
+  considerations:"Faces intense cost pressure from Chinese OEMs (Xiaomi, Realme). Must balance global economies of scale against markets that demand distinct technical certifications, voltages, and form factors.",
+  phase2:{
+    strong:"Five years of strong execution in your first market have given TechGear a track record, a regional supply-chain network, and credibility with distribution partners. The board has approved a second-wave expansion budget, citing confidence in the management team's ability to read complex markets. Internally, TechGear has launched a new product line — the \"Gear Pro\" series — targeting mid-market consumers with a $250–$400 price point, providing a stronger margin buffer than the original entry-level lineup.",
+    weak:"Five years of strategic strain in your first market have tested TechGear's cash reserves and organizational bandwidth. However, the board remains committed to international growth, and the lessons learned — however costly — have sharpened the team's understanding of global market pressures. TechGear has also quietly repositioned its product lineup, adding a \"Gear Pro\" mid-market series to improve margins ahead of the second expansion.",
+    global:"Globally, the consumer electronics landscape has shifted: AI-integrated devices are becoming table stakes, Chinese OEMs have expanded aggressively beyond Asia, and supply chain diversification away from single-country sourcing has become a strategic imperative following pandemic-era disruptions. Trade policy uncertainty continues to reshape the economics of international electronics manufacturing."
+  },
+  countries:[
+    {id:"IN",name:"India",
+     profile:"The world's most populous market with a rapidly expanding smartphone-owning middle class. Average selling prices remain far below global norms, and the government actively uses tariff policy to force electronics manufacturers into local production.",
+     data:{gdp_pc:"$8,300 (PPP)",growth:"6.8% GDP growth",econ_freedom:"52.9/100",risk:"Moderate",corruption:"39/100",lpi:"38th globally",trade:"In Negotiations",fdi_restrict:"High — local partnerships mandatory in many sectors",currency:"INR (moderate volatility)"},
+     intel:"Price is king. Over 60% of smartphones sold in India are below $200 USD. The 'Make in India' initiative provides subsidies to firms that establish local manufacturing. However, navigating India's bureaucracy and multi-tiered distribution network requires deep local expertise. Regional languages, power infrastructure, and connectivity vary enormously between urban and rural markets.",
+     phase2hint:"India's smartphone market has continued explosive growth, now the world's second-largest. Government policy has intensified: PLI (Production-Linked Incentive) schemes have attracted Apple, Samsung, and Foxconn to expand domestic manufacturing significantly, raising the bar for local production commitments.",
+     idealStrategy:"Transnational",
+     reason:"India forces TechGear to pursue <em>both</em> cost efficiency AND local responsiveness simultaneously. Cost pressures demand global-scale manufacturing efficiencies, but 35%+ import duties, regional certification requirements, and price-sensitive consumers demand genuine local adaptation. Neither pure standardization nor full localization alone is sufficient.",
+     twist:{
+       headline:"India Escalates Trade Barrier Policy — Digital Sovereignty Act Passed",
+       political:"The Indian government has passed the 'Digital Sovereignty Act,' raising import duties on fully assembled consumer electronics from 25% to 52%. The Ministry of Commerce has simultaneously fast-tracked a preferential procurement scheme for brands with at least 40% domestic value-added manufacturing.",
+       economic:"Your imported finished goods are now priced 30% above comparable Xiaomi and Samsung India-assembled units. Shelf offtake has dropped 44% in two quarters. Distribution partners in Delhi and Mumbai are threatening to de-list your products unless pricing becomes competitive within 6 months.",
+       competitive:"Xiaomi India already manufactures 95% of its units locally through Foxconn's Sri City facility. Samsung has operated local assembly for over a decade. Both are positioned to capture your market share immediately.",
+       social:"Indian consumer nationalism is rising. Social media campaigns actively promote 'Vocal for Local' purchasing. A TechGear product review was flooded with comments calling the brand a 'foreign exploiter.'",
+       ideal:"Pivot",
+       defendLogic:"Staying the course means absorbing the tariff burden permanently — either by cutting margins to zero or accepting dramatic price increases. The structural nature of India's policy shift makes patience extremely costly. Without local manufacturing, the cost disadvantage is permanent, not cyclical.",
+       pivotLogic:"A Pivot means committing to local assembly, activating 'Make in India' subsidies, and reconfiguring the supply chain. This is expensive and disruptive short-term, but aligns with where the market is permanently heading. Firms that act now lock in location advantages before rivals saturate contract manufacturing capacity."
+     }
+    },
+    {id:"DE",name:"Germany",
+     profile:"Europe's largest economy and a global benchmark for precision engineering, environmental standards, and consumer quality expectations. Germans are discerning buyers who research heavily and are willing to pay a premium — but only for products that genuinely meet their exacting standards.",
+     data:{gdp_pc:"$63,100 (PPP)",growth:"0.4% GDP growth (slow)",econ_freedom:"73.7/100",risk:"Very Low",corruption:"78/100",lpi:"3rd globally",trade:"CETA with Canada (In Force)",fdi_restrict:"Low — open investment environment",currency:"EUR (stable)"},
+     intel:"Germany's EU Ecodesign Directive, WEEE regulations, and national Elektrogesetz require extensive product teardown documentation, recyclability certifications, and take-back program infrastructure. German retailers like MediaMarkt and Saturn demand detailed compliance dossiers before shelf placement. Consumer reviews on Stiftung Warentest are taken very seriously — a poor score can kill a product launch.",
+     phase2hint:"Germany's economy has rebounded modestly. EU sustainability regulations have tightened further with Right-to-Repair enforcement now active. German consumers' purchasing power remains strong, and demand for certified sustainable electronics is growing rapidly, rewarding brands that invested early in compliance infrastructure.",
+     idealStrategy:"Localization",
+     reason:"Germany exemplifies <em>high local responsiveness pressure with moderate cost pressure</em> — the textbook case for Localization. German law, consumer expectations, and retailer requirements demand genuine product adaptation, local compliance infrastructure, and sustainability commitments. A standardized global product will fail regulatory gatekeeping.",
+     twist:{
+       headline:"EU Ecodesign Directive 2.0: Right-to-Repair Mandate Now EU-Wide",
+       political:"The European Commission has passed the Right-to-Repair extension, effective 18 months from now. All consumer electronics in the EU must achieve a minimum Repairability Score of 7/10, provide 10 years of spare parts availability, and demonstrate 75% recyclable materials by weight. Germany's UBA will conduct random product audits.",
+       economic:"Compliance costs are estimated at €8–14 per unit for a full design overhaul. Non-compliant products face a €500/unit fine and forced market withdrawal. Three of TechGear's current German best-sellers do not meet the threshold — they represent 62% of German revenue.",
+       competitive:"Interestingly, most Chinese competitors (Xiaomi, Oppo, TCL) are equally non-compliant. European-heritage brands — Nokia's HMD Global, Fairphone — have been designing for repairability for years and are positioned to benefit enormously. Fairphone has launched a campaign calling this 'the moment the market catches up to us.'",
+       social:"German consumers are watching carefully. Brands that proactively communicate their compliance roadmap are receiving very positive press. Environmental NGOs have published a 'brands to watch' list — TechGear's inclusion could be a significant reputational opportunity.",
+       ideal:"Defend",
+       defendLogic:"This twist is a <em>regulatory compliance challenge</em> — not a market collapse or a strategic misalignment. If TechGear already chose Localization, the organizational capability to adapt to local regulatory requirements is already built in. Staying the course means investing in the compliance roadmap and using the 18-month window to execute methodically. Brands that do not panic and instead comply systematically come out with a stronger German market position.",
+       pivotLogic:"Pivoting — changing the fundamental market strategy — risks destroying the carefully built German distribution relationships and brand reputation that Localization creates. The threat is addressable within the current strategic framework; a full pivot would be disruptive without being necessary."
+     }
+    },
+    {id:"BR",name:"Brazil",
+     profile:"South America's largest economy with a booming digital consumer market. Brazil presents a paradox: enormous consumer appetite for technology products alongside one of the world's most complex tax systems and strong protectionist policies that make importing finished goods economically unviable.",
+     data:{gdp_pc:"$18,600 (PPP)",growth:"2.9% GDP growth",econ_freedom:"53.2/100",risk:"Moderate-High",corruption:"36/100",lpi:"51st globally",trade:"Exploratory — no bilateral agreement",fdi_restrict:"Moderate — local production strongly incentivized",currency:"BRL (high volatility)"},
+     intel:"Brazil's tax system can add 80–100% to the cost of an imported consumer electronic device. This effectively forces serious players to establish local assembly in Zona Franca de Manaus (Manaus Free Trade Zone), where manufacturers receive enormous federal tax exemptions. Firms that localize production access those tax breaks and build real cost competitiveness.",
+     phase2hint:"Brazil's digital economy has continued to mature, with smartphone penetration now over 90% in urban areas. However, macroeconomic instability and currency volatility remain persistent risks. The Manaus Free Trade Zone has attracted additional investment from Asian electronics manufacturers, increasing competitive pressure within the local-production segment.",
+     idealStrategy:"Localization",
+     reason:"Brazil's protectionist framework creates <em>extreme local responsiveness pressure</em> that cannot be overcome through cost efficiency alone. Localization — investing in local assembly and Manaus Free Trade Zone operations — is the only path to competitive pricing. An imported standardized product faces an effective price handicap of 80%+ over local producers.",
+     twist:{
+       headline:"Brazilian Real Collapses — Local Operations Become Unexpected Competitive Moat",
+       political:"Following a contested federal election, international investors have lost confidence in Brazilian fiscal policy. Capital controls on dividend repatriation have been imposed. The government has declared a fiscal emergency.",
+       economic:"The BRL has devalued 38% against the USD in eight months. For competitors who manufacture in Asia and import to Brazil, their USD-denominated costs have made their products dramatically more expensive in local currency terms — consumers see price increases of 40–60%. However, TechGear's Manaus-localized operations source the majority of components and labour domestically in BRL, meaning their cost base has <em>not risen commensurately</em>.",
+       competitive:"Apple Brazil, Samsung Brazil, and Motorola — all relying heavily on imported components priced in USD — have been forced to raise prices sharply. TechGear's Manaus assembly operation is now one of the most cost-competitive in the market. Two smaller local players have already gone bankrupt as their imported chipsets became unaffordable.",
+       social:"Brazilian consumers are acutely aware of the price increases hitting imported brands. TechGear's positioning as a locally-produced product is resonating unexpectedly well on social media.",
+       ideal:"Defend",
+       defendLogic:"This twist is a rare situation where the disruption <em>rewards</em> the Localization strategy TechGear pursued. The currency shock that devastates import-dependent rivals has made TechGear's local operations into a genuine competitive moat. Staying the course — doubling down on Manaus infrastructure, expanding distribution, and capturing market share being vacated by uncompetitive importers — is the optimal response. This is a windfall, not a crisis.",
+       pivotLogic:"Pivoting away from Localization at this moment would be strategically catastrophic. Abandoning local operations to pursue a cost-reduction standardization play means giving up the very advantage the currency shock has just created. This is the worst possible time to second-guess the Localization commitment."
+     }
+    }
+  ]
+},
+
+/* ---- 2. GLOBAL FLAVORS ---- */
+"GlobalFlavors":{
+  name:"Global Flavors",industry:"Quick Service Restaurants (QSR)",budget:40000000,
+  tagline:'"Taste Without Borders."',
+  founded:"1998, Chicago, Illinois, USA",revenue:"~$2.1B across 1,800+ locations",employees:"~28,000 globally",
+  products:"Signature burger platform, regional limited-time offerings, freshly-squeezed beverages, plant-based line launched 2022",
+  strengths:"Strong franchising model (70% franchised); proprietary supply-chain management technology; well-funded marketing and brand recognition in North America and Western Europe.",
+  weaknesses:"Franchisee relationships can slow strategic pivots; limited operational experience in emerging markets; plant-based product line has underperformed projections outside North America.",
+  considerations:"Must balance the global brand identity (consistency, cleanliness, speed) against intense pressure to adapt menus, portions, ingredient sources, and restaurant design for local tastes and regulations. Cultural missteps in food service are highly visible and brand-damaging.",
+  phase2:{
+    strong:"Five years of strong performance in your first market have energized the Global Flavors franchising pipeline. The board has approved a second-wave expansion, citing strong ROIC and franchisee satisfaction scores. Internally, the company has launched 'GF 2.0' — a restaurant redesign program featuring digital ordering kiosks, mobile-first loyalty apps, and a modular kitchen that can accommodate up to 40% local menu variation without changing core equipment.",
+    weak:"The first market delivered mixed results that tested the franchise model's resilience. However, the board remains committed to international growth and has brought in a new SVP of International Operations with deep emerging-market experience. Internally, a 'GF 2.0' redesign program has modernized the restaurant format with digital ordering kiosks and a modular kitchen supporting up to 40% local menu variation.",
+    global:"Globally, QSR is evolving fast: delivery platforms (Uber Eats, Grab, Talabah) now account for 35%+ of QSR revenue in many markets, shifting competitive dynamics from real estate to digital visibility. Plant-based menus are becoming regulatory expectations in several markets. Inflationary food costs have squeezed margins industry-wide, rewarding companies with localized supply chains over import-dependent operators."
+  },
+  countries:[
+    {id:"CN",name:"China",
+     profile:"The world's largest restaurant market by transaction volume, with QSR consumption growing at 9% annually. China presents extraordinary scale opportunity but is also one of the most competitively intense food service environments on earth, with entrenched domestic brands and powerful regional flavor loyalties.",
+     data:{gdp_pc:"$21,400 (PPP)",growth:"5.2% GDP growth",econ_freedom:"48.3/100",risk:"Moderate — elevated political/regulatory risk",corruption:"42/100",lpi:"19th globally",trade:"No bilateral trade agreement",fdi_restrict:"Moderate — joint ventures preferred",currency:"CNY (managed float)"},
+     intel:"China does not function as a single market. Northern consumers prefer noodles and savory flavors; Cantonese consumers favor lighter rice dishes; Sichuanese consumers demand intense spice. Any national QSR brand that treats China as monolithic will lose to regional specialists. Furthermore, digital integration — ordering via WeChat Mini Programs, Alipay, Meituan delivery — is not optional; it is the primary channel for urban under-35 consumers. McDonald's and KFC have both invested hundreds of millions in China-specific digital infrastructure.",
+     phase2hint:"China's domestic QSR sector has continued to professionalize rapidly. Local chains backed by private equity have further matured their operations. WeChat Pay and Alipay have become even more dominant — cash is now rare even in Tier-3 cities. Consumer expectations around food quality, traceability, and sustainability have risen significantly among the urban middle class.",
+     idealStrategy:"Localization",
+     reason:"China's QSR market presents the highest local responsiveness pressure of any market Global Flavors will enter. Regional taste differences demand different menus by province. Digital ecosystem integration requires deep local technology partnerships. KFC's transformation from struggling foreign brand to China's most-visited restaurant chain was driven entirely by radical menu localization — their Chinese menu shares fewer than 30% of items with the US menu.",
+     twist:{
+       headline:"Aggressive Domestic Clone Chain Floods Tier-2 Cities",
+       political:"The Chinese government's 'Domestic Brand Protection Initiative' has given preferential land allocation and reduced commercial rent to 'Meiwei Express' (美味快递), which openly mimics Global Flavors' store design and menu layout. Meiwei has expanded from 30 to 800 locations in 18 months, primarily in Tier-2 and Tier-3 cities where Global Flavors has just entered.",
+       economic:"Meiwei's prices are 38% lower — no franchise royalty burden, no IP licensing costs, entirely domestic ingredients. In the 12 cities where they directly compete, Global Flavors' same-store sales have declined an average of 22%. Two franchise partners have requested royalty relief.",
+       competitive:"However, Meiwei's quality is inconsistent. Consumer reviews on Dianping consistently give Global Flavors significantly higher ratings for food quality, hygiene, and service. In Tier-1 cities (Shanghai, Beijing, Shenzhen, Guangzhou), where Meiwei has limited presence, Global Flavors continues to outperform targets.",
+       social:"Urban middle-class Chinese consumers are differentiating between the brands. Social media positions Global Flavors as a 'premium experience' and Meiwei as a 'cheap copy.' A viral Weibo series titled 'I can taste the difference' generated over 4 million impressions positive for Global Flavors.",
+       ideal:"Defend",
+       defendLogic:"A price-matching or wholesale pivot in response to Meiwei means competing on Meiwei's terms — which is a fight Global Flavors cannot win. The franchise model and international ingredient standards make pure cost competition structurally impossible. The evidence shows Global Flavors' genuine competitive advantage — quality, hygiene, experience — is resonating strongly in premium segments. Defending means doubling down on quality differentiation, accelerating Tier-1 expansion where Meiwei is weak, and using the localized menu strategy to highlight superiority.",
+       pivotLogic:"Pivoting — reducing quality standards, cutting prices, abandoning localization investments — destroys the very thing making Global Flavors competitive. Chasing a cost-position competitor with a better cost structure is a race to the bottom that the franchise model cannot sustain."
+     }
+    },
+    {id:"AE",name:"UAE",
+     profile:"One of the world's highest per-capita income markets, with a cosmopolitan population where expatriates constitute approximately 89% of the total. The UAE's food service market is driven by brand-conscious consumers seeking authentic international dining experiences.",
+     data:{gdp_pc:"$87,700 (PPP)",growth:"4.1% GDP growth",econ_freedom:"71.1/100",risk:"Low",corruption:"68/100",lpi:"12th globally",trade:"FIPA (Foreign Investment Protection Agreement)",fdi_restrict:"Low-Medium — free zones offer 100% foreign ownership",currency:"AED (pegged to USD)"},
+     intel:"The UAE QSR market is powered by three distinct segments: Western expatriates seeking familiar home-country brands; South Asian expatriates who are high-frequency QSR users; and affluent Emirati nationals who treat brand-name international dining as a status signal. All three segments actively seek out recognized, premium international brands. Halal certification is non-negotiable — a regulatory requirement, not merely a preference.",
+     phase2hint:"The UAE has accelerated its economic diversification program. Dubai's tourism sector has grown substantially, and the government has expanded residency programs to attract long-term talent, stabilizing the expatriate population. Digital food delivery through Talabat and Deliveroo UAE has become essential — over 40% of UAE QSR revenue now flows through delivery platforms.",
+     idealStrategy:"International",
+     reason:"The UAE's 89% expatriate population creates a uniquely low local responsiveness environment for an international QSR brand. Customers actively want the authentic, recognized Global Flavors experience they know from home countries. The strategic logic is International: export the core domestic value proposition with minimal local adaptation beyond mandatory halal compliance.",
+     twist:{
+       headline:"Oil Price Collapse Triggers Major Expatriate Workforce Reduction",
+       political:"A sustained drop in global oil prices — triggered by an OPEC+ production dispute and accelerated electric vehicle adoption — has forced UAE sovereign wealth fund reallocations. Government-linked employers have announced 35,000 expatriate position eliminations over the next 12 months. The UAE Ministry of Human Resources has reduced short-term work permit renewals.",
+       economic:"The expatriate population — Global Flavors' primary customer segment — is projected to decline by 12–18% in key markets. Foot traffic at Global Flavors UAE locations has dropped 19% quarter-over-quarter. Average transaction values remain high, but frequency has declined sharply as expatriates reduce discretionary spending.",
+       competitive:"Local Emirati-owned casual dining brands that have invested in targeting the Emirati population — through Arabic-language marketing, traditional menu integrations, and government loyalty programs — are maintaining their performance. They are far less dependent on the expatriate segment.",
+       social:"The Emirati national consumer segment (~11% of population, but significantly higher discretionary spend) has been underserved by international QSR brands. Research suggests Emiratis are particularly receptive to brands that demonstrate cultural awareness: Arabic-language digital ordering and Emirati-inspired menu specials during national holidays.",
+       ideal:"Pivot",
+       defendLogic:"Defending the International strategy means continuing to serve a shrinking customer base. The expatriate population decline is structural — tied to oil economics — not cyclical. As the customer base erodes, same-store economics become increasingly difficult without adaptation.",
+       pivotLogic:"Pivoting means strategically repositioning: developing targeted Emirati consumer offers (Arabic digital ordering, culturally resonant LTOs during UAE National Day, Ramadan-specific atmosphere adaptations) while maintaining core brand experience. This expands the addressable market from a shrinking expat base to include the high-value local population. Brands that make this pivot now will be positioned when the expat population eventually stabilizes."
+     }
+    },
+    {id:"NG",name:"Nigeria",
+     profile:"Africa's largest economy by GDP and most populous nation at 220+ million. Lagos alone is a megacity of 15–22 million with a fast-growing urban middle class hungry for international brand experiences. But infrastructure gaps and supply chain fragility make this one of the most operationally complex markets in the world.",
+     data:{gdp_pc:"$5,800 (PPP)",growth:"3.1% GDP growth",econ_freedom:"53.9/100",risk:"High",corruption:"25/100",lpi:"88th globally",trade:"No bilateral agreement; AfCFTA participation",fdi_restrict:"Moderate-High — local content requirements in several sectors",currency:"NGN (high volatility; parallel market premium)"},
+     intel:"Nigeria's QSR market has seen remarkable growth driven by urbanization and a youth bulge (median age: 18). However, operational challenges are extreme: erratic power supply requires generator backup infrastructure; roads in Lagos can turn a 10-km delivery run into a 3-hour ordeal; cold chain logistics are severely underdeveloped; and the foreign exchange market has historically imposed restrictions on profit repatriation.",
+     phase2hint:"Nigeria's urban economy has continued to expand despite macroeconomic volatility. The Naira devaluation in recent years has made locally-sourced supply chains significantly more attractive. The Lagos QSR market has attracted new entrants, increasing competitive pressure but also validating the market's long-term potential. Mobile payment platforms (PalmPay, Opay) have made digital ordering newly accessible.",
+     idealStrategy:"Transnational",
+     reason:"Nigeria demands a Transnational approach: extreme price sensitivity demands serious cost discipline — the standardization dimension. But infrastructure fragility and import barriers mean a purely standardized import-dependent model will collapse under supply chain shock. Localizing ingredient sourcing while maintaining the core brand experience and quality standards is the only viable model.",
+     twist:{
+       headline:"National Port Strike and Customs Backlog Halts Proprietary Ingredient Supply for Six Months",
+       political:"A combined action by the Nigeria Dock Labour Union and a parallel customs officers' industrial action has created the worst port congestion in Lagos Port Complex history. An estimated 80,000 containers are stranded, and the backlog is projected to take 5–8 months to clear. The government has declared a national logistics emergency.",
+       economic:"Global Flavors' proprietary bun recipe requires a specific flour blend, and its signature sauce is imported through Apapa Port. Both supply lines are completely cut. Current on-site reserves are estimated at 6–8 weeks. Without these two ingredients, the core menu as currently constituted cannot be served. Six months of lost revenue at current run-rate equates to approximately $7–9M.",
+       competitive:"Chicken Republic, a domestic Nigerian QSR chain, sources 100% of its ingredients locally. It is unaffected by the port crisis and is actively expanding, capturing market share from import-dependent competitors.",
+       social:"Nigerian business media has been covering the port crisis extensively. Brands that manage to keep operating through local sourcing pivots are being lauded as committed to Nigeria. Brands that close locations are drawing criticism for 'not trusting Nigerian suppliers.'",
+       ideal:"Pivot",
+       defendLogic:"Defending means waiting out the port crisis on existing inventory. With only 6–8 weeks of reserves, this is not viable for a multi-month disruption. Locations will be forced to close or operate with severely limited menus, eroding brand experience and consumer trust.",
+       pivotLogic:"Pivoting means executing an emergency local sourcing protocol: working with Nigerian flour mills, local sauce manufacturers, and domestic produce distributors to develop a bridge supply chain for the duration of the crisis — and quite likely permanently, given the infrastructure risk lesson being learned."
+     }
+    }
+  ]
+},
+
+/* ---- 3. LUXMODE ---- */
+"LuxMode":{
+  name:"LuxMode Apparel",industry:"Luxury Fashion & Accessories",budget:30000000,
+  tagline:'"Crafted in Europe. Worn by the World."',
+  founded:"1987, Milan, Italy (HQ relocated to Paris, 2011)",revenue:"~€890M across 240 flagship boutiques",employees:"~6,200 globally (60% in Italy and France)",
+  products:"Ready-to-wear, leather goods, footwear, eyewear, and fragrance. Known for a restrained aesthetic philosophy described as 'confident minimalism.'",
+  strengths:"Exceptionally strong brand heritage and craftsmanship narrative; Italian ateliers produce limited quantities per season, maintaining exclusivity; strong department store wholesale relationships.",
+  weaknesses:"Small relative to LVMH and Kering competitors; limited digital commerce infrastructure; brand awareness thin outside European and North American markets.",
+  considerations:"The luxury brand paradox: the value of the brand depends entirely on maintaining exclusivity, authenticity, and European heritage. Any adaptation perceived as 'cheapening' the product is existentially damaging. But ignoring local preferences in key growth markets risks irrelevance.",
+  phase2:{
+    strong:"Five years of successful luxury expansion have burnished LuxMode's global credentials. The brand has been cited in BOF and Vogue Business as one of the most strategically sophisticated European luxury mid-houses. Internally, LuxMode has built a dedicated 'Global Markets' division with regional creative directors and has signed a partnership with a leading global logistics firm to accelerate white-glove retail delivery capabilities. The board has approved a premium second-wave expansion budget.",
+    weak:"The first international expansion tested LuxMode's organizational capacity and brand consistency. Lessons learned have led to a significant internal restructuring: a new 'Global Markets' division has been created, and a global Brand Consistency Director has been hired from LVMH to ensure future expansions preserve the brand's premium positioning. The board is cautiously approving a second wave.",
+    global:"Globally, luxury is being reshaped by three forces: the rise of 'Gen Z luxury' (younger consumers who demand authenticity, sustainability, and cultural relevance alongside prestige); the growth of secondary market platforms (The RealReal, Vestiaire Collective) creating new competitive dynamics for new goods; and geopolitical tensions affecting cross-border luxury goods logistics. Brands with strong regional partnerships and digital storytelling capabilities are outperforming."
+  },
+  countries:[
+    {id:"JP",name:"Japan",
+     profile:"A cornerstone luxury market with a sophisticated consumer base that has revered European fashion craftsmanship for decades. Japan's luxury penetration per capita is among the highest in the world. Japanese consumers have built a cultural relationship with brands like LuxMode that transcends trend cycles.",
+     data:{gdp_pc:"$49,000 (PPP)",growth:"1.1% GDP growth",econ_freedom:"69.3/100",risk:"Very Low",corruption:"73/100",lpi:"13th globally",trade:"CPTPP (In Force)",fdi_restrict:"Low — open retail environment",currency:"JPY (managed; recent depreciation)"},
+     intel:"Japanese luxury consumers are among the world's most educated and discerning. They research the brand's history and study the ateliers. The concept of 'monozukuri' (the art of making things) deeply resonates — they want to know exactly where and how a LuxMode piece was made. Isetan and Takashimaya department store buyer relationships are critical gatekeeping relationships that reward consistency and penalize brand dilution.",
+     phase2hint:"Japan's luxury market has continued to evolve. A weaker Yen has paradoxically boosted luxury spending by making Japan attractive to high-spending tourists, who are now a significant revenue driver at flagship stores. The 35+ segment's loyalty to heritage European brands remains exceptionally strong — a reliable foundation for established luxury brands.",
+     idealStrategy:"Global Standardization",
+     reason:"Japan is one of the few markets globally where <em>standardizing the product is actually the high-value strategy</em>. Japanese luxury consumers don't want a locally adapted version of LuxMode — they want the authentic Milanese and Parisian original. Any localization of the product itself would be perceived as a breach of authenticity that destroys the premium positioning.",
+     twist:{
+       headline:"Generational Shift: Gen Z Rejects Traditional Luxury in Favor of Streetwear Collaborations",
+       political:"No regulatory dimension. This is a pure cultural inflection point.",
+       economic:"The core Gen Z luxury segment (ages 18–27) in Japan has pivoted sharply toward 'luxury streetwear collaborations.' LuxMode's 'confident minimalism' aesthetic is being described by Nikkei Style as 'museum fashion' — respected but aging. Same-store sales to under-30 consumers have declined 31% YoY, while the 35+ segment remains stable. Total revenue is flat, but the pipeline is concerning.",
+       competitive:"Gucci's collaboration with Japanese artist Hajime Sorayama generated $180M in Japan alone. Dior's capsule collection with sacai sold out in 8 minutes on LINE shopping. None of LuxMode's closest peers have yet entered the collaboration space — the category remains differentiated.",
+       social:"Japanese media is actively debating the future of European luxury with Japanese youth. A widely shared essay in Fashion Snap argued that European luxury houses face a binary choice: 'remain a heritage museum or become a living cultural conversation.' LuxMode was cited as 'at risk' of the former.",
+       ideal:"Pivot",
+       defendLogic:"Staying the course means accepting the demographic erosion of the Gen Z luxury consumer in Japan. The 35+ segment keeps LuxMode financially viable for now, but the generational pipeline will affect long-term brand relevance. Ignoring cultural shifts in Japan — a market that sets luxury trends across all of Asia — has cascading effects on Korea, China, and Southeast Asia.",
+       pivotLogic:"A Pivot doesn't mean abandoning LuxMode's heritage — it means extending it into a culturally resonant new format. A carefully curated collaboration with one Japanese designer or artist, distributed exclusively in Japan, would signal that LuxMode is a living brand without diluting the core product. This is how LVMH-owned brands consistently renew relevance in Japan."
+     }
+    },
+    {id:"MX",name:"Mexico",
+     profile:"A rapidly modernizing market with the highest luxury goods growth rate in Latin America. Mexico City's Polanco and Santa Fe districts rival European cities for boutique density among the affluent class. Proximity to the US and deep exposure to North American brand culture makes Mexico an interesting hybrid luxury market.",
+     data:{gdp_pc:"$22,400 (PPP)",growth:"2.2% GDP growth",econ_freedom:"61.4/100",risk:"Moderate",corruption:"31/100",lpi:"66th globally",trade:"CUSMA / USMCA (In Force)",fdi_restrict:"Low-Moderate — open retail FDI",currency:"MXN (moderate volatility)"},
+     intel:"Mexico's luxury consumer is aspirational and brand-aware, but operates in a dual economy context: the ultra-high-net-worth segment is genuinely comparable to European luxury consumers in purchasing behavior, while the emerging middle class luxury consumer is highly price-sensitive and susceptible to trade agreement disruptions. CUSMA provides important preferential treatment for European luxury goods entering through North American distribution channels.",
+     phase2hint:"Mexico's luxury sector has grown strongly, driven by nearshoring-related income growth in Northern Mexico and continued wealth concentration in Mexico City and Guadalajara. A new generation of Mexican luxury consumers — largely educated abroad and deeply connected to international fashion media — has elevated the market's sophistication. Trade agreement stability has largely held, though periodic renegotiation noise continues.",
+     idealStrategy:"Transnational",
+     reason:"Mexico requires LuxMode to thread the needle between maintaining its premium European brand identity (the prestige that drives demand among Polanco consumers) and managing costs carefully enough to price accessibly to the emerging aspirational middle class — LuxMode's key growth segment. Transnational strategy balances global brand consistency with targeted pricing and regional marketing investment.",
+     twist:{
+       headline:"CUSMA Renegotiation Threatens 40% Tariff on European Luxury Textiles",
+       political:"Under pressure from domestic textile lobby groups in both the US and Mexico, a CUSMA renegotiation working group has tabled a proposal applying a 40% tariff on luxury textile imports from non-CUSMA countries, specifically targeting European brands. The proposal is politically motivated; a decision is expected within 14–18 months.",
+       economic:"If enacted, a 40% tariff would require either: absorbing it (compressing margins by 18–22 points); passing it through (retail price increase of 28–35%); or restructuring manufacturing to qualify under CUSMA rules of origin. It is important to note: this is a <em>proposal under negotiation</em>, not enacted policy.",
+       competitive:"US domestic brands (Coach, Kate Spade, Michael Kors) would benefit significantly from the tariff. However, they operate at a different price tier than LuxMode. True luxury consumers have historically demonstrated willingness to absorb price increases rather than trade down to US mass-luxury brands.",
+       social:"Mexican luxury media has framed this as a trade policy fight, not a LuxMode brand issue. High-profile Mexican fashion influencers have begun preemptively promoting European brands in response, positioning the tariff threat as an attack on Mexican consumers' right to international style — unexpectedly positive for LuxMode brand sentiment.",
+       ideal:"Defend",
+       defendLogic:"The tariff is a proposal, not law — acting as if it is certain means spending $8–12M restructuring a supply chain in response to a political negotiation that may resolve favorably. Luxury brand history shows that true luxury consumers are far more tolerant of price increases than mass consumers. The Defend strategy means monitoring negotiations closely, engaging trade counsel, communicating confidence to Mexican retail partners, and not making structural decisions based on a 14–18 month political process.",
+       pivotLogic:"Pivoting — moving manufacturing to CUSMA-eligible regions — takes 18–24+ months minimum, costs enormous capital, and risks quality deterioration (made-in-Italy is part of LuxMode's brand proposition). If the tariff doesn't pass, you've spent $10M+ for nothing. The risk-adjusted value of a premature pivot is very low."
+     }
+    },
+    {id:"KR",name:"South Korea",
+     profile:"A global luxury bellwether: Korean consumers set trends that ripple across East and Southeast Asia. K-beauty, K-pop, and Korean fashion media have given Korean consumer taste extraordinary global influence. Luxury brands that succeed in Korea gain significant reputational currency across the entire region.",
+     data:{gdp_pc:"$53,500 (PPP)",growth:"2.5% GDP growth",econ_freedom:"73.7/100",risk:"Low",corruption:"63/100",lpi:"17th globally",trade:"CKFTA (Canada-Korea FTA in Force)",fdi_restrict:"Low — highly open retail environment",currency:"KRW (moderate volatility)"},
+     intel:"Korea's luxury consumer is hyper-trend-aware, digitally native, and driven significantly by K-pop and K-drama cultural currents. A brand's relevance in Korea is determined not just by product quality, but by cultural embedding — who is wearing it, which idol is photographed with it, which drama featured it. Lotte Department Store and Shinsegae are dominant luxury retail channels. E-commerce via Naver Shopping and Kakao Commerce is the fastest-growing channel for luxury accessories.",
+     phase2hint:"South Korea's luxury market has continued its remarkable growth trajectory, becoming the world's highest per-capita luxury spending market for several consecutive years. K-pop's global reach has expanded dramatically, making Korean brand endorsements even more valuable globally. Sustainability and cultural authenticity have become major purchase drivers among Korean Gen Z luxury consumers.",
+     idealStrategy:"Localization",
+     reason:"South Korea's luxury market moves at K-pop speed — trend cycles that take 2–3 years in Europe complete in 6 months in Korea. LuxMode's 'confident minimalism' aesthetic must be actively reinterpreted for Korean consumers through local creative partnerships, K-entertainment brand ambassadors, and culturally specific seasonal campaigns. Global standardization would leave the brand invisible in a market where cultural relevance is the primary purchase driver.",
+     twist:{
+       headline:"Viral K-Pop Crisis: Brand Accused of Cultural Insensitivity in Global Campaign",
+       political:"No regulatory dimension. This is a social media reputational crisis with real commercial consequences.",
+       economic:"LuxMode's latest global campaign has been accused by Korean social media users of appropriating Korean traditional dress (hanbok) motifs in a way described as 'lazy, inaccurate, and disrespectful.' Within 72 hours, the campaign's hashtag has accumulated 340,000 critical posts in Korean. LuxMode Korea's Gangnam flagship has had protestors outside for three days. Lotte Department Store has called requesting a 'discussion.' Same-store sales have declined 28% week-over-week.",
+       competitive:"Competing European luxury brands — who have invested in genuine Korean cultural partnerships and K-pop ambassador agreements — are conspicuously silent. LVMH Korea's communication director was quoted as saying only 'we stand with Korean culture.' Several Korean luxury KOLs with combined following of 8M+ have publicly switched to LuxMode competitors for the season.",
+       social:"The crisis has been picked up by Korean mainstream media. The LuxMode CEO has been silent. Korean celebrity brand ambassador (contracted for $1.2M annually) has not posted about LuxMode in six days. Her management has reached out asking for a meeting. Consumer sentiment research shows a 41-point brand trust decline among 18–35 female consumers — LuxMode's core segment — in a single week.",
+       ideal:"Pivot",
+       defendLogic:"Staying the course — continuing the campaign, saying nothing, waiting for the news cycle to pass — is the highest-risk option in a market defined by digital speed. Korean social media crises that are not addressed quickly tend to escalate, not dissipate. A brand that ignores Korean cultural feedback in a market where cultural responsiveness is the strategy is contradicting its own stated approach.",
+       pivotLogic:"Pivoting means executing an immediate, culturally intelligent crisis response: a public apology crafted with Korean cultural consultants, a tangible commitment (collaboration with a Korean hanbok artisan or a fund for Korean cultural preservation), and re-engagement of the celebrity ambassador with a new culturally appropriate creative brief. Done well, crisis recovery in Korean social media can actually increase brand resonance — 'the brand that listened' becomes a powerful narrative."
+     }
+    }
+  ]
+},
+
+/* ---- 4. NOVACARE HEALTH ---- */
+"NovaCare":{
+  name:"NovaCare Health",industry:"Digital Health & Telemedicine",budget:20000000,
+  tagline:'"Healthcare Without Borders."',
+  founded:"2016, Boston, Massachusetts, USA",revenue:"~$185M annually (SaaS-based model)",employees:"~900 globally",
+  products:"AI-assisted telemedicine platform, remote patient monitoring devices, chronic disease management apps, B2B white-label licensing to hospital networks",
+  strengths:"Best-in-class AI diagnostic accuracy (98.3% vs. 91.2% industry benchmark); strong US and Canadian regulatory approvals in hand; SaaS model creates recurring revenue with high switching costs once integrated into hospital workflows.",
+  weaknesses:"Highly regulated industry in every jurisdiction — each new country requires separate regulatory approval processes lasting 12–36 months; small team with limited bandwidth for multiple simultaneous market entries; brand recognition nearly zero outside North America.",
+  considerations:"Healthcare is one of the most locally regulated industries on earth. Data sovereignty laws, patient privacy frameworks (GDPR, HIPAA equivalents), and requirements for local medical professional certification partnerships vary dramatically by country. Cultural attitudes toward telehealth vs. in-person care also differ significantly — especially in markets where the doctor-patient relationship is deeply traditional.",
+  phase2:{
+    strong:"NovaCare's first international market has validated the platform's global applicability and produced strong testimonials from hospital partners that are now being used in sales processes worldwide. The company has hired a VP of International Regulatory Affairs and built a compliance playbook that accelerates future market entry. The board has expanded the second-wave expansion budget, and NovaCare has secured a strategic partnership with a global medical device distributor for logistics and last-mile support.",
+    weak:"The first market entry revealed how underestimated regulatory complexity can be in healthcare — even with strong technology, compliance timelines stretched the expansion budget. The company has since hired a VP of International Regulatory Affairs and built a compliance playbook to prevent future delays. The board approved the second wave on the condition that the regulatory strategy is mapped out before market selection, not after.",
+    global:"Globally, digital health has been permanently transformed by the post-pandemic mainstreaming of telemedicine. Governments that were skeptical have now enacted frameworks enabling telemedicine reimbursement. AI diagnostic tools have gone from 'experimental' to 'regulated medical device' status in most major markets, raising both the standards required and the market credibility for serious players. Health data sovereignty is emerging as a major geopolitical issue — every major jurisdiction is tightening rules about where patient data can be stored."
+  },
+  countries:[
+    {id:"SA",name:"Saudi Arabia",
+     profile:"A high-income Gulf state aggressively modernizing its healthcare system as part of Vision 2030. The government has earmarked $65 billion for healthcare sector development and is actively seeking foreign digital health technology partnerships. English is widely used in the professional and medical sectors.",
+     data:{gdp_pc:"$63,000 (PPP)",growth:"3.8% GDP growth",econ_freedom:"67.2/100",risk:"Low-Moderate",corruption:"52/100",lpi:"20th globally",trade:"No bilateral agreement; GCC framework",fdi_restrict:"Low-Medium — Vision 2030 actively welcomes foreign healthcare FDI",currency:"SAR (pegged to USD)"},
+     intel:"Saudi Arabia's Ministry of Health is one of the most proactive government partners for foreign digital health companies globally right now. Vision 2030's health pillar has set explicit targets for telemedicine adoption: 70% of primary care consultations to be delivered digitally by 2030. The regulatory pathway — through the Saudi Food and Drug Authority (SFDA) — is complex but well-documented, and the government offers 'regulatory fast-track' partnerships for compliant foreign health tech firms. The primary consumer-facing challenge is cultural: many Saudi patients (especially older demographics) strongly prefer in-person physician consultations.",
+     phase2hint:"Saudi Arabia has continued to accelerate Vision 2030 health reforms. A new national telemedicine reimbursement framework has been implemented, meaning NovaCare services can now be billed directly to the national insurance system. Data localization requirements have been strengthened — all patient data for Saudi citizens must now reside on NDMO-approved local servers.",
+     idealStrategy:"International",
+     reason:"Saudi Arabia's government is actively seeking the 'authentic,' best-practice digital health solution from global leaders — not a locally adapted version. The professional healthcare environment operates largely in English, the regulatory pathway actively welcomes foreign firms, and the government's Vision 2030 framework essentially 'pulls' international technology in with minimal customization pressure. An International strategy — exporting NovaCare's proven North American platform with minimal local adaptation — is both appropriate and cost-efficient.",
+     twist:{
+       headline:"Saudi National Data Management Office Issues Mandatory Health Data Localization Decree",
+       political:"The Saudi NDMO has issued Circular 7 under the Personal Data Protection Law: all health data pertaining to Saudi citizens and residents must be processed and stored exclusively on servers physically located within the Kingdom, certified under the national cloud security framework. Effective in 12 months. Non-compliant health tech providers face market exit.",
+       economic:"NovaCare's current platform architecture routes all data through US-based AWS servers. Full cloud infrastructure migration to Saudi-certified providers (e.g., STC Cloud, Oracle Saudi Arabia) is estimated at $2.8–4.2M and requires 8–14 months of engineering work. However, once completed, the data localization infrastructure becomes a competitive barrier to entry — new foreign entrants face the same requirement.",
+       competitive:"Large US health tech incumbents (Epic, Cerner's Saudi operations, Oracle Health) have already completed or begun data localization as part of government hospital system contracts. Smaller competitors without Saudi infrastructure are increasingly being excluded from new RFP processes. The Ministry of Health has indicated preference for vendors with local data infrastructure in future procurement.",
+       social:"Saudi hospital administrators and Ministry of Health officials are broadly supportive of the directive, framing it as a patient rights and national sovereignty issue. Foreign vendors who comply proactively are being publicly recognized; those who resist are receiving negative coverage in Saudi health sector publications.",
+       ideal:"Pivot",
+       defendLogic:"Staying the course — operating on US-based servers and hoping for a compliance timeline extension or exemption — is extremely high-risk. The NDMO has been unambiguous: non-compliance means market exit in 12 months. Waiting is not a strategy; it is a countdown to forced withdrawal.",
+       pivotLogic:"Pivoting means investing in Saudi-certified local cloud infrastructure now. This is a significant capital commitment ($2.8–4.2M, 8–14 months), but it: (a) ensures continued market access; (b) creates a compliance infrastructure that becomes a competitive barrier to smaller rivals; and (c) signals NovaCare's long-term commitment to the Saudi market — critical for future Ministry of Health contracts."
+     }
+    },
+    {id:"ID",name:"Indonesia",
+     profile:"The world's fourth most populous nation at 280+ million people, spread across 17,000 islands with dramatically varying healthcare infrastructure. Indonesia's healthcare system is severely underserved — there are only 0.4 physicians per 1,000 people (global average: 1.7), making telemedicine not a luxury but a structural necessity.",
+     data:{gdp_pc:"$14,500 (PPP)",growth:"5.1% GDP growth",econ_freedom:"64.2/100",risk:"Moderate",corruption:"34/100",lpi:"46th globally",trade:"CEPA discussions ongoing",fdi_restrict:"Moderate — majority domestic ownership required in healthcare services",currency:"IDR (moderate volatility)"},
+     intel:"Indonesia's telemedicine market has exploded post-pandemic: platforms like Halodoc and Alodokter have demonstrated the model works at scale. The challenge for NovaCare is that Indonesia operates in Bahasa Indonesia, and healthcare regulations are issued by the Ministry of Health (Kemenkes) in Bahasa only. Healthcare delivery standards must comply with local medical practice laws that require Indonesian-licensed physicians. Furthermore, connectivity infrastructure varies enormously — Jakarta's 5G is world-class; rural Kalimantan operates on 3G or satellite. The SaaS model must accommodate very low-bandwidth versions.",
+     phase2hint:"Indonesia's digital health regulatory framework has been overhauled with a new Telemedicine Regulation (Permenkes 20/2024), requiring all telemedicine platforms serving Indonesian patients to obtain explicit Ministry of Health certification. The government has also expanded the JKN (national health insurance) scheme to cover telemedicine consultations, dramatically expanding the addressable market.",
+     idealStrategy:"Transnational",
+     reason:"Indonesia demands a Transnational approach: NovaCare needs both the global-scale technology infrastructure that makes its AI diagnostic quality possible (standardization dimension) AND deep local adaptation — Bahasa Indonesia interfaces, low-bandwidth compatibility for outer islands, Indonesian-licensed physician networks, local regulatory compliance, and pricing structures aligned with Indonesian income levels. Neither pure standardization nor full localization is sufficient alone.",
+     twist:{
+       headline:"Government Launches $200M Subsidy Program for Domestic Digital Health Startups",
+       political:"The Indonesian Ministry of Health and BPJS Kesehatan (national health insurer) have jointly announced the 'Digital Health Indonesia' initiative, providing $200M in subsidies, preferential BPJS reimbursement rates (25% above market), and government procurement contracts exclusively to Indonesian-registered and majority-owned digital health platforms for an initial 5-year period.",
+       economic:"Halodoc and Alodokter — already NovaCare's primary competitors — will receive substantial subsidy support, allowing them to cut end-user prices significantly while maintaining or improving margins. NovaCare, as a foreign-majority-owned platform, is excluded from the subsidy program and the preferential BPJS rates.",
+       competitive:"However, NovaCare's AI diagnostic accuracy advantage remains significant: independent studies have shown NovaCare's AI misdiagnosis rate is 40% lower than the domestic platforms. Hospital network administrators — particularly in the private healthcare segment (e.g., Siloam, Mitra Keluarga chains) — are acutely aware of this quality differential and have continued to prefer NovaCare for higher-acuity cases.",
+       social:"Indonesian consumers in urban areas are price-sensitive and will shift to subsidized domestic platforms for routine consultations. However, Indonesian physicians and hospital administrators have been vocal about quality concerns with the domestic platforms. Medical associations have published comparative accuracy studies that favor NovaCare significantly.",
+       ideal:"Defend",
+       defendLogic:"The subsidy program changes the competitive economics for routine consumer consultations — but NovaCare's sustainable competitive advantage is AI diagnostic quality, which is most valued in the premium private hospital segment and for higher-acuity cases. Defending means doubling down on the hospital B2B channel (where quality matters more than price), strengthening physician relationships, and positioning as the premium-quality option rather than competing on price with subsidized rivals. The hospital segment is structurally insulated from the consumer subsidy program.",
+       pivotLogic:"A full Pivot — attempting to match subsidized domestic platforms on price, or restructuring ownership to qualify for Indonesian subsidies — would require either margin-destroying price cuts or complex ownership restructuring that takes 18+ months. Either path risks destroying NovaCare's quality positioning without securing the cost-position battle."
+     }
+    },
+    {id:"FR",name:"France",
+     profile:"Europe's third-largest economy and home to one of the world's most comprehensive public healthcare systems. France is a highly attractive digital health market — the government has been actively investing in digital health transformation — but it is also one of the most heavily regulated and culturally distinctive markets for healthcare technology.",
+     data:{gdp_pc:"$53,200 (PPP)",growth:"1.1% GDP growth",econ_freedom:"63.8/100",risk:"Very Low",corruption:"71/100",lpi:"16th globally",trade:"CETA with Canada (In Force)",fdi_restrict:"Low — EU open investment framework",currency:"EUR (stable)"},
+     intel:"France has created one of the world's most robust digital health regulatory frameworks: the HAS (Haute Autorité de Santé) certification is required for any digital health tool that influences clinical decisions, and reimbursement by the French national health insurance (Assurance Maladie) requires separate approval. The Ségur du Numérique is a €2B government program explicitly designed to accelerate health digital transformation — but it mandates interoperability with French health data standards (SNDS) and requires hosting on French-certified HDS (Hébergeur de Données de Santé) cloud infrastructure. The Toubon Law requires all patient-facing interfaces to be in French.",
+     phase2hint:"France's Ségur du Numérique program has fully operationalized, and HAS certification has become a strict requirement — not just preferred — for reimbursed digital health tools. GDPR enforcement in health data has intensified, with CNIL (France's data regulator) issuing its largest-ever health data fine of €15M against a non-compliant provider last year. French hospital networks that have adopted HDS-compliant platforms are showing strong NPS scores for digital health tools.",
+     idealStrategy:"Localization",
+     reason:"France represents the highest local responsiveness pressure in NovaCare's country set. The Toubon Law mandates French language. HAS clinical certification requires adaptation to French medical practice standards. Ségur du Numérique interoperability requirements demand technical integration with French health data infrastructure. GDPR + French HDS cloud certification require data architecture changes. French physician culture has historically been highly resistant to algorithm-based clinical decision support — genuine local professional engagement is essential. This is textbook Localization.",
+     twist:{
+       headline:"CNIL Issues Landmark AI Health Data Ruling — Foreign Algorithm Providers Face New Audit Requirements",
+       political:"France's data protection authority (CNIL) has issued landmark Délibération 2024-142 under GDPR Article 22, requiring all AI-based clinical decision support tools used in French public healthcare settings to undergo an annual algorithmic audit by a CNIL-approved French accreditation body. Foreign algorithm providers must additionally submit their model training data documentation to French authorities for review within 18 months.",
+       economic:"The audit requirement applies to NovaCare's core AI diagnostic engine — the company's primary competitive advantage. Compliance requires: retaining a CNIL-approved French auditor (€180–400K/year); translating and submitting training data documentation (significant internal engineering time); and potentially disclosing proprietary model architecture to French regulators. However, once certified, the CNIL approval becomes a significant trust signal with French hospital procurement teams.",
+       competitive:"US health tech giants (Epic, Oracle Health) operating in France face the same requirement. Domestic French digital health startups (Doctolib — which operates in this adjacent space — and emerging French AI diagnostic companies) are structurally advantaged as their training data and algorithm documentation is already in French and aligns with French regulatory standards. However, none yet match NovaCare's diagnostic accuracy.",
+       social:"French physicians have been broadly supportive of the audit requirement, citing longstanding concerns about 'black box' AI in clinical settings. Medical journals including Revue du Praticien have published editorials supporting the regulation. The narrative is framed as patient safety and professional sovereignty over AI — not anti-competitive.",
+       ideal:"Defend",
+       defendLogic:"If NovaCare chose Localization for France, the company already has: French-language interfaces, HDS-certified cloud infrastructure, and HAS certification — which means a CNIL algorithmic audit is a compliance extension of the existing framework, not a strategic rupture. Defending means investing in CNIL audit compliance, using the approved status as a competitive differentiator with French hospital buyers, and positioning the regulatory investment as a trust-building tool with the French medical establishment. The compliance process is costly, but it raises barriers to entry for less-prepared competitors.",
+       pivotLogic:"A full strategic pivot — withdrawing from or fundamentally changing the France approach — would forfeit the investment already made in French localization, the HAS certification, and the HDS cloud infrastructure. The CNIL audit is a compliance challenge within the existing strategic framework, not a signal to abandon the market."
+     }
+    }
+  ]
+},
+
+/* ---- 5. GREENSHIFT ENERGY ---- */
+"GreenShift":{
+  name:"GreenShift Energy",industry:"Renewable Energy Solutions",budget:35000000,
+  tagline:'"Power the Future, Locally."',
+  founded:"2011, Copenhagen, Denmark",revenue:"~DKK 2.4B (~$340M) across 14 countries",employees:"~1,800 globally",
+  products:"Utility-scale solar PV systems, commercial & industrial (C&I) rooftop solar, battery energy storage systems (BESS), and a proprietary grid management software platform (\"GridOS\")",
+  strengths:"Proprietary high-efficiency solar panel technology (24.1% conversion efficiency vs. 20.3% industry average); strong project finance relationships with European development banks; GridOS software creates long-term recurring revenue and high switching costs.",
+  weaknesses:"Very capital-intensive project delivery model; heavily dependent on government renewable energy policy frameworks — political instability creates direct revenue risk; limited experience in markets without well-developed renewable energy regulatory frameworks.",
+  considerations:"Renewable energy is among the most policy-sensitive industries on earth. A change of government can cancel procurement rounds, alter feed-in tariffs, or impose local content requirements overnight. GreenShift's technology advantage must be paired with deep understanding of each market's regulatory framework, local content rules, and project finance environment. Community stakeholder engagement is a non-negotiable success factor in most markets.",
+  phase2:{
+    strong:"Five years of successful renewable energy deployment in the first market have given GreenShift a strong reference project portfolio — one of the most valuable assets in the renewable energy sector, where procurement decisions are heavily influenced by demonstrated in-country track records. The company has established a local in-country team and built relationships with key government ministries, utilities, and project finance institutions. The board has approved a larger second-wave budget, confident in GreenShift's ability to navigate complex market environments.",
+    weak:"The first market entry delivered more modest returns than projected — a combination of policy timing issues and project execution complexity that is common in first-country renewable energy entries. However, the reference project (even a smaller one) is now operational and generating bankable cash flows that validate the technology to international investors. The board has approved the second expansion with a clearer operational playbook and a new Head of Project Development who brings deep emerging-market experience.",
+    global:"Globally, the renewable energy sector has experienced both extraordinary growth and extraordinary turbulence: the IEA projects renewable capacity additions will exceed all other energy sources combined through 2030; simultaneously, supply chain disruptions (solar panel shortages, battery material constraints) and rising interest rates have increased project finance costs significantly. Countries with the clearest, most stable renewable energy policy frameworks are attracting the bulk of new capital — policy risk has never been more consequential for investment decisions."
+  },
+  countries:[
+    {id:"CL",name:"Chile",
+     profile:"South America's most open economy and one of the world's leading destinations for renewable energy investment. The Atacama Desert in northern Chile has the highest solar irradiance levels on earth, making utility-scale solar economics exceptionally compelling. Chile has ambitious carbon-neutrality targets (2050) and a transparent, rules-based energy regulatory framework.",
+     data:{gdp_pc:"$28,700 (PPP)",growth:"2.4% GDP growth",econ_freedom:"77.3/100",risk:"Low",corruption:"67/100",lpi:"32nd globally",trade:"CCFTA (Canada-Chile FTA in Force)",fdi_restrict:"Low — Chile's DL600 framework provides strong foreign investment protections",currency:"CLP (moderate volatility)"},
+     intel:"Chile's electricity market (SING/SEN grids) operates through a transparent spot market where renewable generators bid competitively. The National Energy Commission (CNE) runs well-structured public auctions for long-term power purchase agreements (PPAs), providing the revenue certainty that project finance requires. Environmental Impact Assessments (EIAs) follow clear procedures, though indigenous community consultation (FPIC) requirements for Atacama projects require careful stakeholder engagement. Chile's engineering and construction workforce is sophisticated and experienced in large-scale energy infrastructure.",
+     phase2hint:"Chile has continued to add renewable capacity at a remarkable pace — the country now regularly achieves moments of 100% renewable electricity on the national grid. Spot market prices have become more volatile as renewable penetration grows, creating new demand for battery storage integration. The government has launched a 'green hydrogen' export program that is creating new demand for dedicated renewable energy projects near potential hydrogen production sites.",
+     idealStrategy:"Global Standardization",
+     reason:"Chile represents the ideal context for Global Standardization in renewable energy: the market welcomes foreign technology, the regulatory framework is transparent and stable, contracting is in standard project finance formats familiar globally, and GreenShift's technology advantage (superior solar conversion efficiency) is fully applicable without local adaptation. Cost optimization through standardized, globally-sourced equipment maximizes the economic competitiveness of bids in Chile's transparent auction process.",
+     twist:{
+       headline:"Copper Mining Sector Announces Massive Self-Generation Shift — But Distributed Solar Demand Explodes",
+       political:"Chile's largest copper mining companies (Codelco, Antofagasta Minerals, BHP Escondida) — which collectively account for 38% of Chile's total electricity consumption — have announced a coordinated shift to self-generation renewable energy, building dedicated solar and wind facilities that will supply their operations directly. This eliminates a significant portion of the utility-scale PPA market that GreenShift has been targeting.",
+       economic:"The utility-scale PPA market has contracted by an estimated 22% as mining company self-generation reduces third-party electricity demand. However, simultaneously, Chile's distributed solar market — commercial & industrial rooftop solar, solar for agriculture, municipal solar installations — is growing at 34% annually, driven by dramatic falls in installed costs and new net-metering regulations that make small-scale solar highly economical.",
+       competitive:"GreenShift's Global Standardization approach was optimized for large utility-scale projects. Its project development and delivery model — optimized for 50–200MW ground-mount systems — is not well-suited to the 500KW–5MW distributed solar segment that is now the growth market. Domestic Chilean installers (Sonnedix Chile, SolarPack Chile subsidiaries) are better positioned for distributed scale. However, GreenShift's GridOS software has unexpectedly strong applicability for aggregating distributed solar into virtual power plants — a use case that is emerging rapidly.",
+       social:"Chilean municipalities and agricultural cooperatives are increasingly motivated by energy independence and cost reduction. Local government climate commitments are driving demand for community solar projects that require stakeholder engagement approaches very different from the utility-scale model.",
+       ideal:"Pivot",
+       defendLogic:"Defending the utility-scale Global Standardization approach means competing for a shrinking market segment. As mining self-generation reduces PPA demand, the economics of maintaining a utility-scale-only model in Chile become increasingly challenging. Waiting for the market to return to its previous structure is unlikely to be rewarded.",
+       pivotLogic:"Pivoting means reconfiguring GreenShift's Chile operations to target the distributed solar growth market: adapting project development processes for smaller-scale installations, developing GridOS commercial capabilities for distributed solar aggregation, and building local partnerships with regional EPC firms experienced in distributed scale. The pivot is operationally significant but aligns with where the Chilean market is going."
+     }
+    },
+    {id:"ZA",name:"South Africa",
+     profile:"Africa's most industrialized economy, with a severe, decade-long electricity crisis driven by the collapse of state utility Eskom. Load-shedding (rolling blackouts) of 10–12 hours daily has devastated economic productivity and created an urgent, large-scale demand for independent power generation — making South Africa one of the most compelling renewable energy markets in Africa.",
+     data:{gdp_pc:"$14,700 (PPP)",growth:"1.0% GDP growth",econ_freedom:"59.1/100",risk:"Moderate-High",corruption:"43/100",lpi:"39th globally",trade:"TDCA with EU; no bilateral with Canada",fdi_restrict:"Moderate — REIPPPP local content requirements are binding",currency:"ZAR (high volatility)"},
+     intel:"South Africa's Renewable Energy Independent Power Producer Procurement Programme (REIPPPP) is one of the most established renewable energy auction systems in Africa, but it comes with binding local content requirements: at minimum 40% local content by value for solar projects, and minimum 35% for wind. This is not negotiable — projects without compliance are disqualified. Local community equity participation (10%+ community ownership in project companies) is also required. GreenShift's technology advantage must be deployed through genuine local supply chain integration, not a pure technology export model.",
+     phase2hint:"South Africa's energy crisis has intensified politically, and the government has accelerated private sector participation through expanded generation licensing. A new Energy Crisis Committee has streamlined REIPPPP procurement round timelines. The ANC-DA Government of National Unity has brought policy stability not seen in years. Local content requirements have tightened to 45% for the most recent procurement round. C&I solar has been growing at 60%+ annually as businesses bypass Eskom entirely.",
+     idealStrategy:"Transnational",
+     reason:"South Africa demands a Transnational approach: GreenShift needs both global technology excellence (its solar conversion efficiency advantage is directly bankable in REIPPPP bids) AND genuine local adaptation — binding local content requirements, community equity partnerships, local supply chain development, and South African project finance structures. Attempting to deploy a pure-standardization model will disqualify bids; attempting full localization without the proprietary technology advantage wastes GreenShift's core competitive asset.",
+     twist:{
+       headline:"Political Instability Delays REIPPPP Procurement Round — But Private C&I Solar Market Accelerates",
+       political:"A coalition government crisis has caused an 18-month delay in the next REIPPPP procurement round as competing ministerial factions dispute project allocation methodology. The Dept. of Mineral Resources and Energy has issued a statement that the delayed round will proceed 'once cabinet alignment is achieved' — widely interpreted as taking at least 12–18 more months.",
+       economic:"GreenShift's South Africa business plan was built 60% around REIPPPP project revenues. With procurement stalled, the government-dependent revenue pipeline has effectively been suspended. However, the C&I (commercial & industrial) solar market — businesses installing solar to escape Eskom's unreliability without government procurement involvement — has accelerated dramatically. C&I solar installations grew 63% last year and 71% the year before. No government approval is required for C&I solar under 1MW; the licensing ceiling has been raised to 100MW for private embedded generation.",
+       competitive:"GreenShift's REIPPPP-optimized organizational model (government bid teams, community liaison processes, development finance institution relationships) is not well-suited to C&I solar, which requires a high-volume, fast-execution project delivery model and direct corporate relationships. However, local South African solar installers who dominate C&I are capacity-constrained — GreenShift's technology and capital could enable large-scale C&I entry through channel partnerships.",
+       social:"South African businesses and municipalities are furious about Eskom's ongoing failures and are highly receptive to private renewable energy solutions. Brands that demonstrate commitment to solving South Africa's energy crisis — regardless of procurement channel — are receiving strong reputational support from business media and civil society.",
+       ideal:"Pivot",
+       defendLogic:"Defending the REIPPPP-focused Transnational strategy means waiting 18+ months for government procurement to restart — with no revenue in the interim. The South African business plan cannot sustain an 18-month revenue gap. The structural opportunity in C&I solar is large, immediate, and requires no government approval to pursue.",
+       pivotLogic:"Pivoting means shifting operational focus from government procurement to C&I solar: building or acquiring channel partnerships with established C&I installers, redeploying the project development team toward corporate client acquisition, and using GreenShift's technology quality and capital to differentiate in a market hungry for credible large-scale solar solutions. The pivot requires adjusting organizational capabilities, but the underlying renewable energy expertise and technology advantage are directly transferable."
+     }
+    },
+    {id:"VN",name:"Vietnam",
+     profile:"One of Southeast Asia's fastest-growing economies, with electricity demand growing at 10–12% annually as manufacturing industrialization accelerates. Vietnam has set ambitious renewable energy targets (50% renewables by 2030) and has historically offered some of Asia's most attractive feed-in tariff rates — though policy implementation has been inconsistent.",
+     data:{gdp_pc:"$13,800 (PPP)",growth:"6.1% GDP growth",econ_freedom:"61.7/100",risk:"Moderate",corruption:"41/100",lpi:"43rd globally",trade:"EVFTA (EU-Vietnam FTA); CPTPP (In Force)",fdi_restrict:"Moderate-High — majority state ownership required in power generation; BOT model standard",currency:"VND (managed; gradual depreciation)"},
+     intel:"Vietnam's renewable energy market requires working through state-owned enterprise (SOE) frameworks. Power purchase agreements must be signed with Vietnam Electricity (EVN) — a state entity — on terms that are non-negotiable on price. The Build-Operate-Transfer (BOT) project model is standard, requiring GreenShift to operate projects for 20 years before transferring to the state. Local content regulations are evolving but increasingly require domestic component sourcing. Vietnamese language proficiency in the project approval bureaucracy is essential — critical government approvals are not conducted in English.",
+     phase2hint:"Vietnam has published its Power Development Plan 8 (PDP8), confirming ambitious solar and wind expansion targets but also introducing a competitive auction system replacing the previous fixed feed-in tariff. The transition to auctions has created a period of policy uncertainty, with several previously approved projects in administrative limbo. However, the long-term demand trajectory remains exceptionally strong, driven by Vietnam's continued manufacturing boom — Samsung, LG, and Intel have all expanded Vietnamese production facilities significantly.",
+     idealStrategy:"Localization",
+     reason:"Vietnam's power sector is fundamentally structured around state partnerships that require deep local adaptation. SOE relationships, BOT project structures, Vietnamese-language regulatory navigation, and local content compliance all demand genuine localization investment. GreenShift cannot 'export' its standard project model to Vietnam — the market's regulatory and SOE architecture requires building a genuinely local operational capability.",
+     twist:{
+       headline:"Vietnam Increases Feed-In Tariff Rate by 40% — Existing Localized Projects Become Dramatically More Profitable",
+       political:"The Vietnamese government, responding to a severe electricity shortage that has caused manufacturing plant shutdowns in industrial provinces, has issued Decision 21/2024/QD-TTg, increasing the feed-in tariff for solar PV from $0.0709/kWh to $0.0992/kWh — a 40% increase, retroactively applicable to all signed BOT project agreements. The decision is effective immediately.",
+       economic:"GreenShift's existing Vietnamese BOT project agreements — negotiated under the previous FiT rate — are now generating 40% higher revenue per kWh than projected in the original financial model. At current generation volumes, this translates to approximately $3.8–4.9M in additional annual revenue per operational project, dramatically improving project IRR and accelerating debt repayment schedules. The projects are now among the most financially attractive in GreenShift's global portfolio.",
+       competitive:"All solar PV operators in Vietnam with signed BOT agreements benefit equally from the FiT increase. However, competitors who did not yet have signed agreements — because they hadn't completed the localization investment required to achieve regulatory approval — do not benefit. GreenShift's early investment in local regulatory navigation and SOE partnerships has directly produced this advantage.",
+       social:"Vietnamese government officials and EVN representatives have praised foreign renewable energy investors who 'committed early and helped solve Vietnam's energy crisis.' GreenShift has received a letter of recognition from the Ministry of Industry and Trade (MOIT) — a powerful signal for future project approvals.",
+       ideal:"Defend",
+       defendLogic:"This twist is a textbook case where the Localization strategy chosen is being rewarded by market events. The FiT increase is a windfall that directly validates the investment in Vietnamese SOE partnerships, local regulatory approvals, and BOT project structures. Staying the course means: accelerating additional project development to capture as many FiT-rate agreements as possible before the government inevitably revises the rate again; strengthening MOIT and EVN relationships to access priority approval queues; and investing the additional revenue into expanding local operational capacity for the next project pipeline.",
+       pivotLogic:"Pivoting away from Localization at this moment — when it is generating extraordinary returns — would be financially irrational. Abandoning the SOE relationship framework that produced these project agreements, or trying to reposition as a standardized technology exporter, would forfeit both the current windfall and the pipeline of future project opportunities that the existing local relationships are producing."
+     }
+    }
+  ]
+}
+
+}; // end db
+
+/* =====================================================================
+   UTILITY
+   ===================================================================== */
+function updateUI(){
+  document.getElementById('budget').innerText=state.budget.toLocaleString();
+  document.getElementById('timeline-display').innerText=state.phase===1?'Year: 1':'Year: 6';
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+
+/* =====================================================================
+   REVIEW MODAL
+   ===================================================================== */
+function openReview(){
+  var h=state.history;
+  if(!h.length){document.getElementById('review-content').innerHTML='<p>No Phase 1 results yet.</p>';}
+  else{
+    var p1=h[0];
+    var stratIcon=p1.correct?'✅':'❌';
+    var twistHtml='<em>Twist not yet resolved.</em>';
+    if(p1.twist){
+      var ti=p1.twist.correct?'✅':'❌';
+      twistHtml='<p><strong>Crisis Response:</strong> Chose <strong>'+(p1.twist.chosen==='Defend'?'Stay the Course':'Pivot Strategy')+'</strong> '+ti+'<br><small>Optimal response was: '+(p1.twist.ideal==='Defend'?'Stay the Course':'Pivot Strategy')+'</small></p>';
+    }
+    document.getElementById('review-content').innerHTML=`
+      <div class="success-box" style="margin:0">
+        <p><strong>Company:</strong> ${state.company.name}</p>
+        <p><strong>Market Entered:</strong> ${p1.country}</p>
+        <p><strong>Strategy Selected:</strong> ${p1.chosen} ${stratIcon}<br><small>Optimal strategy was: ${p1.ideal}</small></p>
+        ${twistHtml}
+        <p><strong>Budget after Phase 1:</strong> $${p1.budget.toLocaleString()}</p>
+        <p><strong>Current budget entering Phase 2:</strong> $${state.budget.toLocaleString()}</p>
+      </div>`;
+  }
+  document.getElementById('review-modal').classList.add('active');
+}
+function closeReview(){document.getElementById('review-modal').classList.remove('active');}
+
+/* =====================================================================
+   COMPANY SELECTION
+   ===================================================================== */
+function renderCompanies(){
+  var grid=document.getElementById('company-grid');
+  for(var key in db){
+    var c=db[key];
+    grid.innerHTML+=`
+      <div class="card">
+        <div>
+          <h3>${c.name}</h3>
+          <p style="font-style:italic;color:#555;margin:0 0 10px">${c.tagline}</p>
+          <p><span class="tags">${c.industry}</span><span class="tags" style="background:#d4edda;color:#155724">Budget: $${(c.budget/1000000).toFixed(1)}M</span></p>
+          <p class="company-detail"><strong>Founded:</strong> ${c.founded}</p>
+          <p class="company-detail"><strong>Revenue:</strong> ${c.revenue}</p>
+          <p class="company-detail"><strong>Products:</strong> ${c.products}</p>
+          <p class="company-detail"><strong>Strengths:</strong> ${c.strengths}</p>
+          <p class="company-detail"><strong>Weaknesses:</strong> ${c.weaknesses}</p>
+          <p class="company-detail"><strong>Strategic Tension:</strong> ${c.considerations}</p>
+        </div>
+        <button class="select-btn" onclick="selectCompany('${key}')">Select ${c.name} &rarr;</button>
+      </div>`;
+  }
+}
+
+function selectCompany(key){
+  state.company=db[key];
+  state.budget=state.company.budget;
+  document.getElementById('display-company-name').innerText=state.company.name;
+  showScreen('screen-company');
+  document.getElementById('screen-company').style.display='none';
+  document.getElementById('game-header').style.display='block';
+  startCountrySelection();
+}
+
+/* =====================================================================
+   COUNTRY SELECTION
+   ===================================================================== */
+function backFromCountries(){
+  if(state.phase===1){
+    // Return to company selection — reset state
+    if(confirm('Return to company selection? Your current progress will be reset.')){
+      state={phase:1,budget:0,company:null,currentCountry:null,history:[]};
+      document.getElementById('game-header').style.display='none';
+      document.getElementById('screen-country').style.display='none';
+      showScreen('screen-company');
+    }
+  }
+  // Phase 2 back button handled by Review modal — the back button in phase 2 returns to twist result
+}
+
+function buildPhase2Brief(){
+  var c=state.company;
+  var h=state.history;
+  var p1=h[0];
+  var isStrong=(p1 && p1.correct);
+  var internalUpdate=isStrong?c.phase2.strong:c.phase2.weak;
+
+  // Build country-specific hints for the remaining 2 countries
+  var countryHints='';
+  c.countries.forEach(function(ctry){
+    if(!ctry.targeted){
+      countryHints+=`<div class="brief-section"><h4>&#127757; ${ctry.name} — 5-Year Update</h4><p>${ctry.phase2hint}</p></div>`;
+    }
+  });
+
+  return `<div class="phase2-brief">
+    <h3>&#128203; Year 6 Executive Briefing: Setting Up Wave 2</h3>
+    <p style="color:#555;font-size:.9em"><em>Five years have passed since your first international expansion. Before selecting your next target market, review what has changed internally at ${c.name} and what is happening in the two remaining candidate countries.</em></p>
+    <div class="brief-section">
+      <h4>&#127970; Internal Company Update — Year 6</h4>
+      <p>${internalUpdate}</p>
+    </div>
+    <div class="brief-section">
+      <h4>&#127758; Global Industry Context</h4>
+      <p>${c.phase2.global}</p>
+    </div>
+    ${countryHints}
+  </div>`;
+}
+
+function startCountrySelection(){
+  updateUI();
+
+  var isPhase2=(state.phase===2);
+  document.getElementById('target-country-display').innerText='Target Market: Pending...';
+  document.getElementById('country-phase-title').innerText=isPhase2
+    ?'Phase 4: Second Market Expansion (Year 6)'
+    :'Phase 1: First Market Prioritization (Years 1–5)';
+  document.getElementById('country-phase-desc').innerText=isPhase2
+    ?'Select your second international market. Study the updated country intelligence above alongside the macro data below.'
+    :'Review the macro-environmental data and market intelligence brief for each country. Select one primary market to enter.';
+
+  // Phase 2 brief
+  document.getElementById('phase2-brief-container').innerHTML=isPhase2?buildPhase2Brief():'';
+
+  // Back button label & review button
+  document.getElementById('btn-back-country').innerText=isPhase2?'\u2190 Review Phase 1 Results':'\u2190 Back to Company Selection';
+  document.getElementById('btn-back-country').onclick=isPhase2?openReview:backFromCountries;
+  document.getElementById('btn-review-p1').style.display='none'; // merged into back button for phase 2
+
+  // Country cards
+  var grid=document.getElementById('country-grid');
+  grid.innerHTML='';
+  state.company.countries.forEach(function(country,index){
+    if(!country.targeted){
+      grid.innerHTML+=`
+        <div class="card">
+          <div>
+            <h3 style="color:#003366">${country.name}</h3>
+            <p style="font-size:.9em">${country.profile}</p>
+            <table class="macro-data">
+              <tr><th>GDP per capita</th><td>${country.data.gdp_pc}</td></tr>
+              <tr><th>Growth Rate</th><td>${country.data.growth}</td></tr>
+              <tr><th>Econ. Freedom</th><td>${country.data.econ_freedom}</td></tr>
+              <tr><th>Political Risk</th><td>${country.data.risk}</td></tr>
+              <tr><th>Corruption (CPI)</th><td>${country.data.corruption}</td></tr>
+              <tr><th>Logistics (LPI)</th><td>${country.data.lpi}</td></tr>
+              <tr><th>FDI Restrictions</th><td>${country.data.fdi_restrict}</td></tr>
+              <tr><th>Trade Agreement</th><td><strong>${country.data.trade}</strong></td></tr>
+            </table>
+            <div class="intel-brief"><h4>&#128203; Market Intelligence Brief</h4><p>${country.intel}</p></div>
+          </div>
+          <button class="select-btn" style="background:#2d5a27" onclick="selectCountry(${index})">Target ${country.name} &rarr;</button>
+        </div>`;
+    }
+  });
+
+  showScreen('screen-country');
+}
+
+function selectCountry(index){
+  state.currentCountry=state.company.countries[index];
+  state.currentCountry.targeted=true;
+  document.getElementById('target-country-display').innerText='Target Market: '+state.currentCountry.name;
+
+  var b=state.budget;
+  var strategies=[
+    {key:'Global Standardization',cost:b*0.30,label:'A) Global Standardization Strategy',
+     tagline:'One product. One brand. Global scale.',
+     description:'Compete primarily through <strong>cost efficiency</strong>. Offer a single, largely uniform product worldwide, leveraging high-volume production to drive down per-unit costs. R&amp;D and marketing are centralized at headquarters with minimal local adaptation.',
+     tradeoffs:'<strong>Works when:</strong> Cost pressure is high and local responsiveness pressure is low — commoditized markets, B2B products, markets where "global" is itself a selling point. <strong>Risk:</strong> Fails in markets with significant regulatory, cultural, or taste differences.',
+     examples:'Intel microchips, Boeing aircraft, certain consumer goods (Gillette razors), standardized industrial equipment.'},
+    {key:'Localization',cost:b*0.40,label:'B) Localization Strategy',
+     tagline:'Think global. Act entirely local.',
+     description:'Customize your product, marketing, supply chain, and organization to match each national market. Each subsidiary functions with significant autonomy; local management has authority over product design, pricing, and promotion.',
+     tradeoffs:'<strong>Works when:</strong> Local responsiveness pressure is high — distinct tastes, regulatory environments, infrastructure requirements, or cultural sensitivities that standard products cannot address. <strong>Risk:</strong> Expensive; duplicates functions; sacrifices global economies of scale.',
+     examples:"McDonald's Japan menu, Nestlé's country-specific product formulations, automobile manufacturers adapting for right-hand drive markets."},
+    {key:'Transnational',cost:b*0.50,label:'C) Transnational Strategy',
+     tagline:'Global efficiency. Local relevance. Simultaneously.',
+     description:'Pursue <strong>both</strong> low costs through global efficiency <em>and</em> local responsiveness through genuine market adaptation — at the same time. Knowledge and capabilities flow in both directions between HQ and subsidiaries. The most organizationally demanding strategy.',
+     tradeoffs:'<strong>Works when:</strong> Both cost pressure AND local responsiveness pressure are high simultaneously. <strong>Risk:</strong> Most expensive and complex to execute; many firms attempt this and fail to achieve either objective — "stuck in the middle."',
+     examples:'Samsung Electronics, Procter & Gamble, ABB industrial conglomerates with local subsidiaries feeding innovation back to global platforms.'},
+    {key:'International',cost:b*0.15,label:'D) International Strategy',
+     tagline:'Export what you know. Minimal local change.',
+     description:'Transfer the domestic value proposition to foreign markets with <strong>minimal adaptation</strong>. The home country product and organizational model are exported largely intact. Local operations focus on distribution and after-sales support.',
+     tradeoffs:'<strong>Works when:</strong> The home country product has a strong, distinctive value proposition that international customers actively seek — brand prestige, unique technology, proprietary expertise. Both cost pressure AND local responsiveness pressure are low. <strong>Risk:</strong> Leaves value on the table in markets where adaptation would increase uptake.',
+     examples:'Early Toyota exports to North America, Microsoft Office (language packs only), high-end European fashion brands, U.S. craft beer brands exported to Europe.'}
+  ];
+
+  document.getElementById('strategy-phase-title').innerText=state.phase===1
+    ?'Phase 2: Core Strategy Selection'
+    :'Phase 5: Core Strategy Selection';
+
+  var html='';
+  strategies.forEach(function(s){
+    html+=`<button class="option-btn" onclick="processStrategy('${s.key}',${s.cost})">
+      <div class="strategy-label">${s.label} <span class="tags" style="background:#d4edda;color:#155724">Cost: $${s.cost.toLocaleString()}</span></div>
+      <div class="strategy-detail">
+        <p style="margin:4px 0"><em>${s.tagline}</em></p>
+        <p style="margin:4px 0">${s.description}</p>
+        <p style="margin:4px 0">${s.tradeoffs}</p>
+        <p style="margin:4px 0"><strong>Examples:</strong> ${s.examples}</p>
+      </div>
+    </button>`;
+  });
+  document.getElementById('strategy-options').innerHTML=html;
+
+  showScreen('screen-strategy');
+}
+
+function goBackToCountries(){
+  state.currentCountry.targeted=false;
+  showScreen('screen-strategy');
+  document.getElementById('screen-strategy').style.display='none';
+  startCountrySelection();
+}
+
+/* =====================================================================
+   STRATEGY RESULT
+   ===================================================================== */
+function processStrategy(strategyName,cost){
+  state.budget-=cost;
+  var ideal=state.currentCountry.idealStrategy;
+  var isCorrect=(strategyName===ideal);
+  var html='';
+
+  if(isCorrect){
+    var rev=state.budget*0.60; state.budget+=rev;
+    html=`<h3 style="color:#155724">&#x2705; Excellent Strategic Fit!</h3>
+          <p>Your executive team correctly diagnosed the market. <strong>${state.currentCountry.name}</strong> requires a <strong>${ideal} strategy</strong>.</p>
+          <div class="ideal-reveal"><strong>Why this is the right call:</strong> ${state.currentCountry.reason}</div>
+          <p style="margin-top:12px"><strong>Financial Impact:</strong> <span style="color:#155724">+$${rev.toLocaleString()} in Years 1–5 revenue.</span> Budget: $${state.budget.toLocaleString()}</p>`;
+  } else {
+    var pen=state.budget*0.20; state.budget-=pen;
+    html=`<h3 style="color:#721c24">&#x274C; Strategic Misalignment!</h3>
+          <p>Your team selected <strong>${strategyName}</strong>. The optimal strategy for <strong>${state.currentCountry.name}</strong> is <strong>${ideal}</strong>.</p>
+          <div class="ideal-reveal warn"><strong>Why ${ideal} is the optimal strategy:</strong> ${state.currentCountry.reason}</div>
+          <p style="margin-top:12px"><strong>Financial Impact:</strong> <span style="color:#721c24">-$${pen.toLocaleString()} in operational losses</span> due to strategic misfit. Budget: $${state.budget.toLocaleString()}</p>`;
+  }
+
+  state.history.push({phase:state.phase,country:state.currentCountry.name,chosen:strategyName,ideal:ideal,correct:isCorrect,budget:state.budget,twist:null});
+  updateUI();
+  document.getElementById('feedback-content').innerHTML=html;
+  document.getElementById('feedback-title').innerText=state.phase===1?'Years 1–5: Expansion Results':'Years 6–10: Expansion Results';
+  showScreen('screen-feedback');
+}
+
+/* =====================================================================
+   TWIST
+   ===================================================================== */
+function startTwist(){
+  var t=state.currentCountry.twist;
+  document.getElementById('twist-title').innerText=state.phase===1
+    ?'Phase 3: Year 5 Market Update — Disruption Alert'
+    :'Phase 6: Year 10 Market Update — Disruption Alert';
+
+  document.getElementById('twist-content').innerHTML=`
+    <h3 style="color:#721c24;margin-top:0">&#128240; Breaking Development: ${t.headline}</h3>
+    <div class="twist-section"><h4 style="color:#721c24">&#127963; Political / Regulatory Context</h4><p>${t.political}</p></div>
+    <div class="twist-section"><h4 style="color:#b8860b">&#128176; Economic Impact on Your Operations</h4><p>${t.economic}</p></div>
+    <div class="twist-section"><h4 style="color:#003366">&#9876; Competitive Landscape</h4><p>${t.competitive}</p></div>
+    <div class="twist-section"><h4 style="color:#5a287d">&#128101; Social / Cultural Dimensions</h4><p>${t.social}</p></div>`;
+
+  var dCost=state.budget*0.10;
+  var pCost=state.budget*0.35;
+  document.getElementById('twist-options').innerHTML=`
+    <button class="option-btn" onclick="processTwist('Defend',${dCost})">
+      <div class="strategy-label">A) Stay the Course — Defend Current Strategy <span class="tags" style="background:#d4edda;color:#155724">Cost: $${dCost.toLocaleString()}</span></div>
+      <div class="strategy-detail">Maintain your current strategic posture. Invest in targeted legal, PR, or operational responses to the specific disruption without fundamentally changing your strategic approach. Lower cost, lower disruption — but requires that your current strategy still holds competitive logic against the new environment.</div>
+    </button>
+    <button class="option-btn" onclick="processTwist('Pivot',${pCost})">
+      <div class="strategy-label">B) Pivot Strategy — Reconfigure Your Value Chain <span class="tags" style="background:#fff3cd;color:#856404">Cost: $${pCost.toLocaleString()}</span></div>
+      <div class="strategy-detail">Fundamentally restructure your market approach in response to the disruption. Higher cost and higher execution risk — but may be necessary if the disruption has permanently altered the strategic environment.</div>
+    </button>`;
+
+  showScreen('screen-twist');
+}
+
+/* =====================================================================
+   TWIST RESULT — FIXED MESSAGING
+   The financial outcome uses weighted randomness based on strategic correctness.
+   The HEADING message explicitly reflects both financial outcome AND strategic correctness,
+   so "Masterful Pivot!" is never shown when the choice was strategically wrong.
+   ===================================================================== */
+function processTwist(decision,cost){
+  state.budget-=cost;
+  var t=state.currentCountry.twist;
+  var ideal=t.ideal;
+  var isCorrect=(decision===ideal);
+  var roll=Math.random();
+  // Correct choice: 80% chance of financial success. Wrong choice: 35% chance of financial success.
+  var succeeded=isCorrect?(roll>0.20):(roll>0.65);
+
+  var heading=''; var html='';
+
+  if(decision==='Defend'){
+    if(succeeded && isCorrect){
+      heading='&#128737;&#65039; Resilience Rewarded — Sound Strategic Call!';
+      var rev=state.budget*0.45; state.budget+=rev;
+      html=`<p>Maintaining your strategic position was the right call. You outlasted panicked competitors and your market relationships remain intact.</p><p><strong>Financial Gain:</strong> <span style="color:#155724">+$${rev.toLocaleString()}</span></p>`;
+    } else if(succeeded && !isCorrect){
+      heading='&#127808; Fortunate Outcome — But Strategically Questionable';
+      var rev=state.budget*0.30; state.budget+=rev;
+      html=`<p>Your firm caught a favorable break and the immediate financials were positive. However, the strategic analysis below suggests that a Pivot was the stronger long-term call given the nature of this disruption. Your team was <strong>lucky</strong>, not strategically optimal.</p><p><strong>Financial Gain (fortune, not strategy):</strong> <span style="color:#155724">+$${rev.toLocaleString()}</span></p>`;
+    } else if(!succeeded && isCorrect){
+      heading='&#9888;&#65039; Right Strategy, Unlucky Execution';
+      var loss=state.budget*0.25; state.budget-=loss;
+      html=`<p>The strategic logic of staying the course was sound, but execution challenges and bad timing produced a negative short-term financial result. This is the right long-term call — the loss reflects circumstances, not a flawed strategy.</p><p><strong>Financial Loss (execution, not strategy):</strong> <span style="color:#721c24">-$${loss.toLocaleString()}</span></p>`;
+    } else {
+      heading='&#128680; Strategic Inertia — Predictable Consequences';
+      var loss=state.budget*0.35; state.budget-=loss;
+      html=`<p>The disruption was structural, not temporary. Maintaining the current strategy without meaningful reconfiguration allowed the competitive gap to widen significantly. A Pivot was called for.</p><p><strong>Financial Loss:</strong> <span style="color:#721c24">-$${loss.toLocaleString()}</span></p>`;
+    }
+  } else { // Pivot
+    if(succeeded && isCorrect){
+      heading='&#128260; Masterful Pivot — Bold and Well-Timed!';
+      var rev=state.budget*0.65; state.budget+=rev;
+      html=`<p>Your bold strategic reconfiguration was exactly what the market required. You repositioned the firm ahead of competitors and captured emerging opportunity created by the disruption.</p><p><strong>Financial Gain:</strong> <span style="color:#155724">+$${rev.toLocaleString()}</span></p>`;
+    } else if(succeeded && !isCorrect){
+      heading='&#127808; Fortunate Outcome — But Strategically Questionable';
+      var rev=state.budget*0.30; state.budget+=rev;
+      html=`<p>The pivot produced positive short-term financial results, but the strategic analysis below suggests that Staying the Course was the stronger call for this disruption. Your team benefited from favorable circumstances, not from optimal strategic judgment.</p><p><strong>Financial Gain (fortune, not strategy):</strong> <span style="color:#155724">+$${rev.toLocaleString()}</span></p>`;
+    } else if(!succeeded && isCorrect){
+      heading='&#9888;&#65039; Right Strategy, Difficult Execution';
+      var loss=state.budget*0.30; state.budget-=loss;
+      html=`<p>The strategic logic of pivoting was correct given the nature of this disruption, but the reconfiguration was organizationally difficult and produced short-term financial losses. The correct long-term call was made, but execution complexity created transitional costs.</p><p><strong>Financial Loss (execution, not strategy):</strong> <span style="color:#721c24">-$${loss.toLocaleString()}</span></p>`;
+    } else {
+      heading='&#128680; Costly Overreaction — Disruption Without Purpose';
+      var loss=state.budget*0.40; state.budget-=loss;
+      html=`<p>The pivot was premature or poorly executed. Disrupting a working strategic model in response to a manageable disruption created more damage than the original threat. The current strategy still held competitive logic — Staying the Course was the right call.</p><p><strong>Financial Loss:</strong> <span style="color:#721c24">-$${loss.toLocaleString()}</span></p>`;
+    }
+  }
+
+  // Always reveal the full strategic rationale
+  var analysisHTML=`
+    <hr style="margin:15px 0">
+    <h4 style="color:#003366">&#128218; Strategic Analysis: What Was the Optimal Response?</h4>
+    <div class="ideal-reveal ${isCorrect?'':'warn'}">
+      <strong>Optimal response: ${ideal==='Defend'?'Stay the Course':'Pivot Strategy'}</strong>
+      ${isCorrect
+        ?'<span style="color:#155724"> &#x2705; Your team chose correctly.</span>'
+        :'<span style="color:#b30000"> &#x274C; Your team chose incorrectly.</span>'}
+    </div>
+    <div class="ideal-reveal info" style="margin-top:8px">
+      <strong>Why Stay the Course was ${ideal==='Defend'?'the right call':'risky'}:</strong> ${t.defendLogic}
+    </div>
+    <div class="ideal-reveal" style="background:#f0fff4;border-color:#28a745;margin-top:8px">
+      <strong>Why Pivot was ${ideal==='Pivot'?'the right call':'risky'}:</strong> ${t.pivotLogic}
+    </div>`;
+
+  updateUI();
+  document.getElementById('twist-result-content').innerHTML='<h3>'+heading+'</h3>'+html+analysisHTML;
+
+  // Save twist to history
+  var lastH=state.history[state.history.length-1];
+  lastH.twist={chosen:decision,ideal:ideal,correct:isCorrect,succeeded:succeeded};
+  lastH.budget=state.budget;
+
+  if(state.phase===2){document.getElementById('btn-next-expansion').innerText='View Final 10-Year Executive Report \u2192';}
+  showScreen('screen-twist-result');
+}
+
+/* =====================================================================
+   ROUTING
+   ===================================================================== */
+function startNextExpansion(){
+  if(state.phase===1){
+    state.phase=2;
+    startCountrySelection();
+  } else {
+    showFinalReport();
+  }
+}
+
+function showFinalReport(){
+  document.getElementById('timeline-display').innerText='Year: 10';
+  var rows=''; var stratScore=0; var twistScore=0;
+  state.history.forEach(function(h,i){
+    var si=h.correct?'✅':'❌';
+    var ti=h.twist?(h.twist.correct?'✅':'❌'):'—';
+    if(h.correct)stratScore++;
+    if(h.twist&&h.twist.correct)twistScore++;
+    rows+=`<tr>
+      <td>Wave ${h.phase} — ${h.country}</td>
+      <td>${h.chosen} ${si}<br><small>Ideal: ${h.ideal}</small></td>
+      <td>${h.twist?(h.twist.chosen==='Defend'?'Stay the Course':'Pivot')+' '+ti+'<br><small>Ideal: '+(h.twist.ideal==='Defend'?'Stay':'Pivot')+'</small>':'—'}</td>
+      <td>$${h.budget.toLocaleString()}</td>
+    </tr>`;
+  });
+  var total=stratScore+twistScore;
+  var comment=total===4?'&#127942; Perfect execution — exceptional global strategic judgment.'
+    :total===3?'&#129351; Strong performance — one misjudgment, but generally sound strategy.'
+    :total===2?'&#129352; Mixed results — revisit how to read cost pressure vs. local responsiveness pressure.'
+    :total===1?'&#129353; Significant misalignment — use this debrief to study Hill &amp; Jones Chapter 11 frameworks carefully.'
+    :'&#128216; Tough run — use the strategic analysis sections above to anchor your debrief discussion.';
+
+  document.getElementById('final-content').innerHTML=`
+    <h3>10-Year Global Expansion Summary: ${state.company.name}</h3>
+    <table class="final-table">
+      <thead><tr><th>Market</th><th>Entry Strategy</th><th>5-Year Response</th><th>Budget After</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <h2 style="color:#155724;margin-top:20px">&#128176; Final Cash Reserves: $${state.budget.toLocaleString()}</h2>
+    <p><strong>Strategy Decisions Correct:</strong> ${stratScore}/2 &nbsp;|&nbsp; <strong>Crisis Responses Correct:</strong> ${twistScore}/2 &nbsp;|&nbsp; <strong>Total:</strong> ${total}/4</p>
+    <div class="ideal-reveal" style="margin-top:10px">${comment}</div>
+    <p style="margin-top:15px;font-size:.9em;color:#555">Compare your <strong>Final Cash Reserves</strong> and <strong>decision accuracy score</strong> with other teams. Use the strategic analysis feedback to guide your debrief discussion on Chapter 11 concepts.</p>`;
+  showScreen('screen-final');
+}
+
+window.onload=renderCompanies;
+</script>
+</body>
+</html>
